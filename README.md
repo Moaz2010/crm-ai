@@ -1,53 +1,312 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# 🤖 AI-Powered CRM Platform
 
 <p align="center">
- The fastest way to build apps with Next.js and Supabase
+  <strong>AI-First CRM with Lead Capture, Enrichment & Smart Scheduling</strong>
 </p>
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
+  <a href="#team-structure"><strong>Team Structure</strong></a> ·
+  <a href="#getting-started"><strong>Getting Started</strong></a> ·
+  <a href="#project-structure"><strong>Project Structure</strong></a>
 </p>
-<br/>
 
-## Features
+---
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+## 🚀 Features
 
-## Demo
+### **🎯 LeadCatch Module**
+- AI-powered lead parsing (LinkedIn, websites, text)
+- Waterfall enrichment (Apollo → Clearbit → etc.)
+- AI lead scoring and categorization
+- CSV import/export
+- Duplicate detection and merging
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+### **📅 Appointment Module**
+- Smart scheduling with AI suggestions
+- Google Calendar & Outlook sync
+- Public booking pages
+- Email/SMS reminders
+- Time zone handling
 
-## Deploy to Vercel
+### **💼 CRM Core**
+- Sales pipeline (Kanban board)
+- Contact & company management
+- Tasks & reminders
+- Activity timeline
+- Analytics & reporting
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### **🤖 AI Features**
+- Lead enrichment and parsing
+- Automated scoring
+- Email generation
+- Smart scheduling suggestions
+- Natural language processing
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+---
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## 👥 Team Structure
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+| Name | Role | Module |
+|------|------|--------|
+| **Ahmed Hossam** | Frontend Lead & Designer | UI/UX, All Pages |
+| **Ahmed Mahmoud** | Backend Engineer | LeadCatch Module |
+| **Anas Salem** | Backend Engineer | Appointments Module |
+| **Moaz El Garawany** | CEO & Tech Lead | Infrastructure, AI, Coordination |
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+---
+
+## 📚 Documentation
+
+- **[STRUCTURE_GUIDE.md](./STRUCTURE_GUIDE.md)** - Complete project structure & team ownership
+- **[QUICK_START.md](./QUICK_START.md)** - Quick reference for engineers
+- **modules/leadcatch/README.md** - LeadCatch module guide
+- **modules/appointments/README.md** - Appointments module guide
+- **modules/ai/README.md** - AI module guide
+- **components/README.md** - Components guide
+
+---
+
+## 🛠️ Tech Stack
+
+### **Frontend**
+- Next.js 14+ (App Router)
+- React 18+
+- TypeScript
+- Tailwind CSS
+- Shadcn UI
+- Framer Motion
+
+### **Backend**
+- Next.js API Routes
+- Supabase (Database, Auth, Storage)
+- Drizzle ORM
+- PostgreSQL
+
+### **AI & Integrations**
+- OpenAI GPT-4o
+- Google Calendar API
+- Microsoft Outlook API
+- Apollo.io (Lead Enrichment)
+- Clearbit (Lead Enrichment)
+- Resend/SendGrid (Email)
+- Twilio (SMS)
+
+### **DevOps**
+- Vercel (Deployment)
+- GitHub Actions (CI/CD)
+- Sentry (Error Tracking)
+- PostHog (Analytics)
+
+---
+
+## 🏁 Getting Started
+
+### **1. Prerequisites**
+```bash
+# Node.js 18+
+node --version
+
+# PNPM
+npm install -g pnpm
+```
+
+### **2. Clone & Install**
+```bash
+cd C:\Users\Moaz\Documents\AI\CRM\crm-ai
+pnpm install
+```
+
+### **3. Environment Setup**
+Copy `.env.example` to `.env.local` and fill in your keys:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+OPENAI_API_KEY=your_openai_key
+```
+
+### **4. Database Setup**
+```bash
+# Run migrations
+pnpm db:migrate
+
+# Push schema to Supabase
+pnpm db:push
+```
+
+### **5. Run Development Server**
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 📂 Project Structure
+
+```
+crm-ai/
+├── app/                    # Next.js App Router (UI Layer)
+│   ├── (marketing)/       # Landing pages
+│   ├── (auth)/            # Login/signup
+│   ├── (dashboard)/       # Main CRM app
+│   ├── (booking)/         # Public booking pages
+│   └── api/               # API routes
+│
+├── modules/                # Business Logic (Domain-Driven Design)
+│   ├── leadcatch/         # LeadCatch module (Ahmed Mahmoud)
+│   ├── appointments/      # Appointments module (Anas Salem)
+│   ├── crm-core/          # CRM core logic
+│   └── ai/                # Shared AI logic
+│
+├── components/             # UI Components (Ahmed Hossam)
+│   ├── ui/                # Shadcn components
+│   ├── layout/            # Layout components
+│   └── ...
+│
+├── lib/                    # Utilities & helpers
+├── hooks/                  # React hooks
+├── types/                  # TypeScript types
+├── db/                     # Database schema (Drizzle)
+└── tests/                  # Unit, integration, e2e tests
+```
+
+See **[STRUCTURE_GUIDE.md](./STRUCTURE_GUIDE.md)** for complete details.
+
+---
+
+## 🎯 For Engineers
+
+### **Quick Links**
+- 📖 [Full Structure Guide](./STRUCTURE_GUIDE.md) - Detailed folder structure & ownership
+- 🚀 [Quick Start Guide](./QUICK_START.md) - Common patterns & workflows
+- 🎯 [LeadCatch Guide](./modules/leadcatch/README.md) - Ahmed Mahmoud
+- 📅 [Appointments Guide](./modules/appointments/README.md) - Anas Salem
+- 🤖 [AI Module Guide](./modules/ai/README.md) - Shared
+- 🎨 [Components Guide](./components/README.md) - Ahmed Hossam
+
+### **Your Workspace**
+Each engineer has their own designated folders. Check the guides above to know where your work goes.
+
+---
+
+## 🔧 Common Commands
+
+```bash
+# Development
+pnpm dev              # Run dev server
+pnpm build            # Build for production
+pnpm start            # Start production server
+
+# Database
+pnpm db:migrate       # Run migrations
+pnpm db:push          # Push schema to DB
+pnpm db:studio        # Open Drizzle Studio
+
+# Testing
+pnpm test             # Run tests
+pnpm test:watch       # Run tests in watch mode
+pnpm test:e2e         # Run e2e tests
+
+# Code Quality
+pnpm lint             # Run ESLint
+pnpm format           # Format with Prettier
+pnpm type-check       # TypeScript check
+
+# Shadcn UI
+pnpm dlx shadcn@latest add button  # Add component
+```
+
+---
+
+## 🌿 Git Workflow
+
+```bash
+# 1. Pull latest changes
+git pull origin main
+
+# 2. Create feature branch
+git checkout -b feature/your-feature-name
+
+# 3. Make changes & commit
+git add .
+git commit -m "feat: add lead parser"
+
+# 4. Push to remote
+git push origin feature/your-feature-name
+
+# 5. Create Pull Request on GitHub
+```
+
+**Commit Format:**
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `refactor:` - Code refactoring
+- `docs:` - Documentation update
+
+---
+
+## 📦 Deployment
+
+### **Vercel (Recommended)**
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### **Environment Variables**
+Set these in Vercel dashboard:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAI_API_KEY`
+- All other API keys
+
+---
+
+## 🐛 Troubleshooting
+
+### **Port already in use**
+```bash
+# Kill process on port 3000
+npx kill-port 3000
+```
+
+### **Supabase connection issues**
+- Check `.env.local` has correct keys
+- Verify Supabase project is running
+- Check network/firewall settings
+
+### **TypeScript errors**
+```bash
+# Clear cache and reinstall
+rm -rf node_modules .next
+pnpm install
+```
+
+---
+
+## 📞 Support
+
+- **Documentation:** Check guides in `docs/` folder
+- **Team Chat:** WhatsApp group
+- **Task Management:** Linear
+- **Issues:** GitHub Issues
+
+---
+
+## 📄 License
+
+Private - All rights reserved
+
+---
+
+**Built with ❤️ by the CRM-AI Team**
 
 ## Clone and run locally
 
