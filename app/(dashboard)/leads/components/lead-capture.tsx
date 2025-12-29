@@ -47,20 +47,19 @@ export function LeadCapture({ onSuccess }: LeadCaptureProps) {
       const data = await response.json();
 
       if (response.ok && data.data) {
-        // Create the lead with proper field mapping
+        // Create the lead with proper field mapping (API expects camelCase)
         const leadData = {
-          first_name: data.data.firstName || '',
-          last_name: data.data.lastName || '',
+          firstName: data.data.firstName || '',
+          lastName: data.data.lastName || '',
           email: data.data.email || '',
           phone: data.data.phone || '',
-          company_name: data.data.company || '',
-          job_title: data.data.jobTitle || '',
+          company: data.data.company || '',
+          jobTitle: data.data.jobTitle || '',
           location: data.data.location || '',
-          linkedin_url: data.data.linkedinUrl || (mode === 'url' && url.includes('linkedin') ? url : ''),
+          linkedinUrl: data.data.linkedinUrl || (mode === 'url' && url.includes('linkedin') ? url : ''),
           website: data.data.website || '',
-          score: data.data.leadScore || 50,
           status: 'new',
-          source_platform: mode === 'url' ? (url.includes('linkedin') ? 'linkedin' : 'website') : 'manual',
+          sourcePlatform: mode === 'url' ? (url.includes('linkedin') ? 'linkedin' : 'website') : 'manual',
         };
         
         const createResponse = await fetch('/api/leads', {

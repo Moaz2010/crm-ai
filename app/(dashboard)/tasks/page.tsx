@@ -98,7 +98,10 @@ export default function TasksPage() {
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        alert('Please log in to create tasks');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('tasks')
@@ -114,6 +117,12 @@ export default function TasksPage() {
         .select()
         .single();
 
+      if (error) {
+        console.error('Task creation error:', error);
+        alert('Failed to create task: ' + error.message);
+        return;
+      }
+
       if (data) {
         setTasks([data, ...tasks]);
         setIsDialogOpen(false);
@@ -127,6 +136,7 @@ export default function TasksPage() {
       }
     } catch (error) {
       console.error('Error creating task:', error);
+      alert('Failed to create task');
     } finally {
       setSaving(false);
     }

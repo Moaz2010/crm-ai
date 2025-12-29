@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Loader2 } from 'lucide-react';
-import { format, addHours } from 'date-fns';
+import { Calendar, Loader2, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -31,6 +31,7 @@ export function CreateAppointmentDialog({
   onOpenChange,
 }: CreateAppointmentDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     attendee_name: '',
@@ -46,10 +47,12 @@ export function CreateAppointmentDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
-      const endDateTime = addHours(startDateTime, parseInt(formData.duration) / 60);
+      // Calculate end time by adding minutes (duration is in minutes)
+      const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60 * 1000);
 
       const response = await fetch('/api/appointments', {
         method: 'POST',
@@ -67,6 +70,8 @@ export function CreateAppointmentDialog({
         }),
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
         onOpenChange(false);
         setFormData({
@@ -83,10 +88,11 @@ export function CreateAppointmentDialog({
         // Trigger a page refresh or use a global state manager
         window.location.reload();
       } else {
-        throw new Error('Failed to create appointment');
+        setError(responseData.error || 'Failed to create appointment');
       }
     } catch (error) {
       console.error('Error creating appointment:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create appointment');
     } finally {
       setLoading(false);
     }
@@ -103,6 +109,12 @@ export function CreateAppointmentDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
