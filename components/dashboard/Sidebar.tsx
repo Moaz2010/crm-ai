@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -24,6 +25,7 @@ import RealPyramidLogo from "@/components/ui/RealPyramidLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimationToggle } from "@/components/AnimationToggle";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -44,6 +46,13 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -98,14 +107,16 @@ export default function Sidebar() {
             <Globe className="h-4 w-4" />
             <span>Public Site</span>
           </Link>
-          <Link
-            href="/login"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              handleSignOut();
+            }}
+            className="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
           >
             <LogOut className="h-4 w-4" />
             <span>Sign Out</span>
-          </Link>
+          </button>
           <div className="flex items-center gap-2 pt-2 border-t border-black/5 dark:border-white/5">
             <ThemeToggle className="h-10 w-10 justify-center bg-transparent border-0 hover:bg-black/5 dark:hover:bg-white/10" />
             <AnimationToggle className="h-10 w-10 border-0 bg-transparent hover:bg-black/5 dark:hover:bg-white/10" />
@@ -164,8 +175,8 @@ export default function Sidebar() {
           </span>
         </Link>
 
-        <Link
-          href="/login"
+        <button
+          onClick={handleSignOut}
           className="group/item flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 transition-all hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 relative"
         >
           <div className="min-w-[24px] flex justify-center">
@@ -174,7 +185,7 @@ export default function Sidebar() {
           <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap absolute left-14 delay-75">
             Sign Out
           </span>
-        </Link>
+        </button>
 
         <div className="pt-2 mt-2 border-t border-black/5 dark:border-white/5 flex flex-col gap-2">
           <div className="flex items-center justify-center group-hover:justify-start gap-3 px-0 group-hover:px-2 transition-all">
