@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
       // Enrich with AI
       const enrichedData = await enrichLead(
         {
-          first_name: parsedData.firstName,
-          last_name: parsedData.lastName,
+          firstName: parsedData.firstName,
+          lastName: parsedData.lastName,
           email: parsedData.email,
-          job_title: parsedData.jobTitle,
+          jobTitle: parsedData.jobTitle,
           company: parsedData.company,
           location: parsedData.location,
         },

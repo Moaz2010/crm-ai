@@ -50,8 +50,8 @@ export default function Hero() {
       ref={containerRef}
       className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-20 text-center"
     >
-      {/* 3D Background Elements */}
-      <Scene />
+      {/* 3D Background Elements - Disabled for build */}
+      {/* <Scene /> */}
 
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
