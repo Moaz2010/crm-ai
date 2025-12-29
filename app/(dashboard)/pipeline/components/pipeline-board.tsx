@@ -143,7 +143,7 @@ export function PipelineBoard() {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 h-full">
+    <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 h-full -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none">
       {stages.map((stage) => {
         const stageDeals = getStageDeals(stage.id);
         const stageValue = getStageValue(stage.id);
@@ -151,7 +151,7 @@ export function PipelineBoard() {
         return (
           <div
             key={stage.id}
-            className="flex-shrink-0 w-80"
+            className="flex-shrink-0 w-[85vw] sm:w-72 md:w-80 snap-center"
             onDragOver={handleDragOver}
             onDrop={() => handleDrop(stage.id)}
           >

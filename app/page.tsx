@@ -137,6 +137,125 @@ export default function LandingPage() {
       {/* Hero Section */}
       <Hero />
 
+      {/* Dashboard Preview Section */}
+      <section className="relative z-10 py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium mb-4">
+              <BarChart3 className="h-4 w-4" />
+              See It In Action
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Your command center for{" "}
+              <span className="text-purple-600 dark:text-purple-400">growth</span>
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+              Everything you need to manage leads, close deals, and grow your business - all in one beautiful dashboard.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="relative"
+          >
+            {/* Dashboard Mockup Container */}
+            <div className="relative rounded-2xl border border-black/10 dark:border-white/10 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800 shadow-2xl overflow-hidden">
+              {/* Browser Chrome */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/50">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-red-500" />
+                  <div className="h-3 w-3 rounded-full bg-yellow-500" />
+                  <div className="h-3 w-3 rounded-full bg-green-500" />
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="px-4 py-1 rounded-md bg-white/80 dark:bg-black/80 text-xs text-gray-500 dark:text-gray-400 border border-black/5 dark:border-white/5">
+                    app.leadcatch.ai/dashboard
+                  </div>
+                </div>
+              </div>
+
+              {/* Dashboard Screenshot/Link */}
+              <Link href="/dashboard" className="block group">
+                <div className="aspect-[16/10] bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 flex items-center justify-center relative overflow-hidden">
+                  {/* Placeholder content - you can replace with an actual screenshot */}
+                  <div className="absolute inset-0 bg-[url('/dashboard-preview.png')] bg-cover bg-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Fallback visual */}
+                  <div className="relative z-10 text-center p-8">
+                    <div className="mb-6 flex items-center justify-center gap-4">
+                      <div className="h-32 w-48 rounded-lg bg-white/60 dark:bg-black/60 backdrop-blur-sm shadow-xl border border-black/10 dark:border-white/10 flex items-center justify-center">
+                        <BarChart3 className="h-16 w-16 text-blue-500" />
+                      </div>
+                      <div className="h-32 w-48 rounded-lg bg-white/60 dark:bg-black/60 backdrop-blur-sm shadow-xl border border-black/10 dark:border-white/10 flex items-center justify-center">
+                        <Target className="h-16 w-16 text-purple-500" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="h-24 w-32 rounded-lg bg-white/60 dark:bg-black/60 backdrop-blur-sm shadow-xl border border-black/10 dark:border-white/10 flex items-center justify-center">
+                        <Users className="h-12 w-12 text-green-500" />
+                      </div>
+                      <div className="h-24 w-32 rounded-lg bg-white/60 dark:bg-black/60 backdrop-blur-sm shadow-xl border border-black/10 dark:border-white/10 flex items-center justify-center">
+                        <Calendar className="h-12 w-12 text-orange-500" />
+                      </div>
+                      <div className="h-24 w-32 rounded-lg bg-white/60 dark:bg-black/60 backdrop-blur-sm shadow-xl border border-black/10 dark:border-white/10 flex items-center justify-center">
+                        <MessageSquare className="h-12 w-12 text-pink-500" />
+                      </div>
+                    </div>
+                    <div className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
+                      View Live Dashboard
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+
+            {/* Floating feature badges */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="absolute -left-4 top-1/4 hidden lg:block"
+            >
+              <div className="px-4 py-2 rounded-full bg-white dark:bg-zinc-900 shadow-xl border border-black/10 dark:border-white/10 text-sm font-medium">
+                📊 Real-time Analytics
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="absolute -right-4 top-1/2 hidden lg:block"
+            >
+              <div className="px-4 py-2 rounded-full bg-white dark:bg-zinc-900 shadow-xl border border-black/10 dark:border-white/10 text-sm font-medium">
+                🤖 AI-Powered Insights
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.6 }}
+              className="absolute left-1/2 -translate-x-1/2 -bottom-4 hidden lg:block"
+            >
+              <div className="px-4 py-2 rounded-full bg-white dark:bg-zinc-900 shadow-xl border border-black/10 dark:border-white/10 text-sm font-medium">
+                ⚡ Lightning Fast
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="relative z-10 py-20 px-6 border-t border-black/5 dark:border-white/5">
         <div className="max-w-6xl mx-auto">

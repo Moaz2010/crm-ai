@@ -47,9 +47,14 @@ export default function UpcomingBookings() {
           <Calendar className="h-5 w-5 text-blue-400" />
           Upcoming Bookings
         </h2>
-        <button className="text-sm text-gray-400 hover:text-white transition-colors">
-          View Calendar
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo
+          </span>
+          <button className="text-sm text-gray-400 hover:text-white transition-colors">
+            View Calendar
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">

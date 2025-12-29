@@ -11,6 +11,7 @@ import {
   Search,
   Plus,
   Settings,
+  ChevronLeft,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { StarsCanvas } from "@/components/ui/Stars";
@@ -26,7 +27,17 @@ export default function CommunicationModule() {
   );
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
-  >("1");
+  >(null);
+  const [showMobileThread, setShowMobileThread] = useState(false);
+
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversationId(id);
+    setShowMobileThread(true);
+  };
+
+  const handleBackToList = () => {
+    setShowMobileThread(false);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white selection:bg-blue-500/30 relative overflow-hidden transition-colors duration-300">
@@ -36,20 +47,30 @@ export default function CommunicationModule() {
 
       {/* Top Navigation Bar */}
       <nav className="border-b border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50 transition-colors duration-300">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div className="h-6 w-px bg-black/10 dark:bg-white/10" />
-            <h1 className="text-lg font-bold bg-gradient-to-r from-black to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+        <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile back button when viewing thread */}
+            {showMobileThread && activeView === "inbox" ? (
+              <button
+                onClick={handleBackToList}
+                className="lg:hidden p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            )}
+            <div className="h-6 w-px bg-black/10 dark:bg-white/10 hidden sm:block" />
+            <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-black to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
               Communication Hub
             </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-medium">
               <Zap className="h-3 w-3" />
               AI Assistant Ready
@@ -59,50 +80,50 @@ export default function CommunicationModule() {
         </div>
       </nav>
 
-      <main className="container mx-auto px-6 py-8 relative z-10 h-[calc(100vh-64px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-3 flex flex-col gap-6 h-full min-h-0">
+      <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 relative z-10 h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 h-full min-h-0">
+          {/* Sidebar Navigation - Hidden on mobile when viewing thread */}
+          <div className={`lg:col-span-3 flex flex-col gap-4 sm:gap-6 h-full min-h-0 ${showMobileThread && activeView === "inbox" ? "hidden lg:flex" : "flex"}`}>
             <SpotlightCard
               disableSpotlight
               className="p-2 !bg-white/60 dark:!bg-black/40 !border-black/10 dark:!border-white/5 shrink-0 h-fit backdrop-blur-md"
             >
-              <div className="space-y-1">
+              <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible">
                 <button
-                  onClick={() => setActiveView("inbox")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  onClick={() => { setActiveView("inbox"); setShowMobileThread(false); }}
+                  className={`flex-shrink-0 lg:w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     activeView === "inbox"
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                       : "text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white"
                   }`}
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Inbox
+                  <span>Inbox</span>
                   <span className="ml-auto bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                     3
                   </span>
                 </button>
                 <button
-                  onClick={() => setActiveView("templates")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  onClick={() => { setActiveView("templates"); setShowMobileThread(false); }}
+                  className={`flex-shrink-0 lg:w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     activeView === "templates"
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                       : "text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white"
                   }`}
                 >
                   <FileText className="h-4 w-4" />
-                  Templates
+                  <span>Templates</span>
                 </button>
                 <button
-                  onClick={() => setActiveView("bulk")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  onClick={() => { setActiveView("bulk"); setShowMobileThread(false); }}
+                  className={`flex-shrink-0 lg:w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     activeView === "bulk"
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                       : "text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white"
                   }`}
                 >
                   <Users className="h-4 w-4" />
-                  Bulk Messaging
+                  <span className="whitespace-nowrap">Bulk Messaging</span>
                 </button>
               </div>
             </SpotlightCard>
@@ -114,14 +135,14 @@ export default function CommunicationModule() {
               >
                 <ConversationList
                   selectedId={selectedConversationId}
-                  onSelect={setSelectedConversationId}
+                  onSelect={handleSelectConversation}
                 />
               </SpotlightCard>
             )}
           </div>
 
-          {/* Main Content Area */}
-          <div className="lg:col-span-9 h-full min-h-0 flex flex-col">
+          {/* Main Content Area - Full width on mobile when viewing thread */}
+          <div className={`lg:col-span-9 h-full min-h-0 flex-col ${showMobileThread || activeView !== "inbox" ? "flex" : "hidden lg:flex"}`}>
             <SpotlightCard
               disableSpotlight
               className="h-full !p-0 !bg-white/60 dark:!bg-black/40 !border-black/10 dark:!border-white/5 overflow-hidden flex flex-col backdrop-blur-md"

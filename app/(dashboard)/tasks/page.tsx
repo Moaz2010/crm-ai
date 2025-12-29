@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Search, Filter, CheckCircle2, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Filter, CheckCircle2, Clock, AlertCircle, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,65 +25,18 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { createClient } from '@/lib/supabase/client';
 
-// Mock data for tasks
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Follow up with John Smith',
-    description: 'Send proposal and schedule demo call',
-    type: 'follow_up',
-    priority: 'high',
-    status: 'pending',
-    dueDate: '2024-01-20',
-    assignedTo: 'Me',
-    relatedTo: { type: 'lead', name: 'John Smith' },
-  },
-  {
-    id: '2',
-    title: 'Prepare Q4 report',
-    description: 'Compile sales data for quarterly review',
-    type: 'task',
-    priority: 'medium',
-    status: 'in_progress',
-    dueDate: '2024-01-25',
-    assignedTo: 'Me',
-    relatedTo: null,
-  },
-  {
-    id: '3',
-    title: 'Call Sarah Johnson',
-    description: 'Discuss contract renewal terms',
-    type: 'call',
-    priority: 'high',
-    status: 'pending',
-    dueDate: '2024-01-18',
-    assignedTo: 'Me',
-    relatedTo: { type: 'contact', name: 'Sarah Johnson' },
-  },
-  {
-    id: '4',
-    title: 'Send meeting notes',
-    description: 'Email summary of product demo to TechCorp team',
-    type: 'email',
-    priority: 'low',
-    status: 'completed',
-    dueDate: '2024-01-15',
-    assignedTo: 'Me',
-    relatedTo: { type: 'company', name: 'TechCorp' },
-  },
-  {
-    id: '5',
-    title: 'Review contract terms',
-    description: 'Legal review for GlobalTech deal',
-    type: 'task',
-    priority: 'urgent',
-    status: 'pending',
-    dueDate: '2024-01-17',
-    assignedTo: 'Me',
-    relatedTo: { type: 'deal', name: 'GlobalTech Partnership' },
-  },
-];
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  priority: string;
+  status: string;
+  due_date?: string;
+  created_at: string;
+}
 
 const priorityColors = {
   urgent: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -100,10 +53,105 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    type: 'task',
+    priority: 'medium',
+    due_date: '',
+  });
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('due_date', { ascending: true });
+
+      if (data) setTasks(data);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createTask = async () => {
+    if (!newTask.title.trim()) return;
+    
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          user_id: user.id,
+          title: newTask.title,
+          description: newTask.description || null,
+          type: newTask.type,
+          priority: newTask.priority,
+          status: 'pending',
+          due_date: newTask.due_date || null,
+        })
+        .select()
+        .single();
+
+      if (data) {
+        setTasks([data, ...tasks]);
+        setIsDialogOpen(false);
+        setNewTask({
+          title: '',
+          description: '',
+          type: 'task',
+          priority: 'medium',
+          due_date: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleTaskStatus = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+    
+    try {
+      const supabase = createClient();
+      await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+
+      setTasks(tasks.map(t =>
+        t.id === taskId ? { ...t, status: newStatus } : t
+      ));
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
 
   const filteredTasks = tasks.filter((task) => {
     const matchesFilter =
@@ -114,45 +162,45 @@ export default function TasksPage() {
     
     const matchesSearch =
       task.title.toLowerCase().includes(search.toLowerCase()) ||
-      task.description.toLowerCase().includes(search.toLowerCase());
+      (task.description || '').toLowerCase().includes(search.toLowerCase());
     
     return matchesFilter && matchesSearch;
   });
-
-  const toggleTaskStatus = (taskId: string) => {
-    setTasks(tasks.map((task) =>
-      task.id === taskId
-        ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' }
-        : task
-    ));
-  };
 
   const stats = {
     total: tasks.length,
     pending: tasks.filter((t) => t.status === 'pending').length,
     inProgress: tasks.filter((t) => t.status === 'in_progress').length,
     completed: tasks.filter((t) => t.status === 'completed').length,
-    overdue: tasks.filter((t) => new Date(t.dueDate) < new Date() && t.status !== 'completed').length,
+    overdue: tasks.filter((t) => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length,
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
             Manage your tasks and stay on top of your work
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <Plus className="w-4 h-4" />
               Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Task</DialogTitle>
               <DialogDescription>
@@ -162,16 +210,26 @@ export default function TasksPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="Task title" />
+                <Input 
+                  id="title" 
+                  placeholder="Task title" 
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Task description" />
+                <Textarea 
+                  id="description" 
+                  placeholder="Task description" 
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Type</Label>
-                  <Select>
+                  <Select value={newTask.type} onValueChange={(v) => setNewTask({ ...newTask, type: v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -185,7 +243,7 @@ export default function TasksPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Priority</Label>
-                  <Select>
+                  <Select value={newTask.priority} onValueChange={(v) => setNewTask({ ...newTask, priority: v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
@@ -200,49 +258,57 @@ export default function TasksPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input id="dueDate" type="date" />
+                <Input 
+                  id="dueDate" 
+                  type="date" 
+                  value={newTask.due_date}
+                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => setIsDialogOpen(false)}>Create Task</Button>
+              <Button onClick={createTask} disabled={saving || !newTask.title.trim()}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Create Task
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Tasks</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total Tasks</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Pending</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">In Progress</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed}</div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Completed</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Overdue</p>
           </CardContent>
         </Card>
       </div>
@@ -279,7 +345,7 @@ export default function TasksPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {filteredTasks.map((task) => (
+            {filteredTasks.length > 0 ? filteredTasks.map((task) => (
               <div
                 key={task.id}
                 className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
@@ -305,36 +371,36 @@ export default function TasksPage() {
                       {task.title}
                     </h3>
                     <Badge
-                      className={priorityColors[task.priority as keyof typeof priorityColors]}
+                      className={priorityColors[task.priority as keyof typeof priorityColors] || priorityColors.medium}
                       variant="outline"
                     >
                       {task.priority}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    {task.description}
-                  </p>
+                  {task.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      {task.description}
+                    </p>
+                  )}
                   <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                     <span className="flex items-center gap-1">
-                      {typeIcons[task.type]}
+                      {typeIcons[task.type] || typeIcons.task}
                       {task.type.replace('_', ' ')}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(task.dueDate).toLocaleDateString()}
-                    </span>
-                    {task.relatedTo && (
-                      <span className="text-indigo-600 dark:text-indigo-400">
-                        {task.relatedTo.type}: {task.relatedTo.name}
+                    {task.due_date && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(task.due_date).toLocaleDateString()}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-            ))}
-            {filteredTasks.length === 0 && (
+            )) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                No tasks found
+                {search || filter !== 'all' 
+                  ? 'No tasks match your filters'
+                  : 'No tasks yet. Create your first task to get started!'}
               </div>
             )}
           </div>

@@ -13,6 +13,7 @@ import {
   Search,
   ChevronRight,
   Target,
+  BarChart3,
 } from "lucide-react";
 import SpotlightCard from "@/components/landing/SpotlightCard";
 import { cn } from "@/lib/utils";
@@ -64,10 +65,10 @@ function RadarWidget({ leads }: { leads: any[] }) {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: i * 0.5, duration: 0.5 }}
-          className="absolute group cursor-pointer"
+          className="absolute group cursor-pointer z-20"
           style={{
-            top: `${50 - ((lead.score || 50) - 50)}%`,
-            left: `${50 + (i % 2 === 0 ? 20 : -20)}%`,
+            top: `${20 + (i * 15) % 40}%`,
+            left: `${20 + (i * 20) % 60}%`,
           }}
         >
           <div className="relative">
@@ -82,12 +83,13 @@ function RadarWidget({ leads }: { leads: any[] }) {
                   : "bg-red-500"
               )}
             />
-            {/* Tooltip */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-xl">
-              <div className="font-bold">{lead.name || lead.first_name}</div>
-              <div className="text-[10px] opacity-80">
-                {lead.company || lead.company_name} • Score: {lead.score || "N/A"}
+            {/* Tooltip - positioned at top with higher z-index */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 dark:bg-gray-800 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none z-50 shadow-2xl border border-gray-700">
+              <div className="font-bold text-sm">{lead.name || lead.first_name || 'Unknown'} {lead.last_name || ''}</div>
+              <div className="text-[11px] opacity-90 mt-0.5">
+                {lead.company || lead.company_name || 'No company'} • Score: {lead.score || 0}
               </div>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
             </div>
           </div>
         </motion.div>
@@ -309,14 +311,61 @@ export default function DashboardPage() {
                 placeholder="Search..."
               />
             </div>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-lg transition-colors relative">
+            <Link href="/settings" className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-lg transition-colors relative" title="Notifications - Configure in Settings">
               <Bell className="h-5 w-5 text-gray-500" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-black" />
-            </button>
+            </Link>
           </div>
         </motion.div>
 
-        {/* Main Grid Layout */}
+        {/* Content based on active tab */}
+        {activeTab === 'analytics' ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Detailed Analytics</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+              View comprehensive analytics with charts, trends, and exportable reports.
+            </p>
+            <Link 
+              href="/analytics" 
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/20"
+            >
+              Open Full Analytics
+            </Link>
+          </div>
+        ) : activeTab === 'live' ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Radio className="h-16 w-16 text-green-500 mb-4 animate-pulse" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Live Activity Feed</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+              Watch real-time activity as leads come in and deals progress through your pipeline.
+            </p>
+            <div className="grid gap-4 w-full max-w-2xl">
+              {stats.recentLeads.length > 0 ? stats.recentLeads.map((lead: any, i: number) => (
+                <motion.div
+                  key={lead.id || i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-4 p-4 bg-white dark:bg-zinc-900/50 rounded-xl border border-gray-200 dark:border-zinc-800"
+                >
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                    <span className="text-white font-bold">{(lead.first_name || lead.name || 'U')[0]}</span>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-gray-900 dark:text-white">{lead.first_name || lead.name} {lead.last_name || ''}</p>
+                    <p className="text-sm text-gray-500">{lead.company_name || lead.company || 'Unknown Company'}</p>
+                  </div>
+                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-full">
+                    New Lead
+                  </span>
+                </motion.div>
+              )) : (
+                <p className="text-gray-500">No recent activity. Start capturing leads to see live updates!</p>
+              )}
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Left Column: Radar & Quick Stats */}
           <div className="md:col-span-4 space-y-6">
@@ -448,33 +497,37 @@ export default function DashboardPage() {
               </SpotlightCard>
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <SpotlightCard className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-none shadow-xl shadow-blue-500/20">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="p-2 bg-white/10 rounded-lg">
-                      <Target className="h-5 w-5 text-white" />
+            {/* <motion.div variants={itemVariants}>
+              <Link href="/analytics" className="block">
+                <SpotlightCard className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-none shadow-xl shadow-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/30 transition-all hover:scale-[1.02] cursor-pointer">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="p-2 bg-white/10 rounded-lg">
+                        <Target className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-full uppercase tracking-wider">Monthly Goal</span>
                     </div>
-                    <span className="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-full uppercase tracking-wider">Monthly Goal</span>
+                    <div className="text-4xl font-bold mb-2">{Math.min(Math.round((stats.totalRevenue / 150000) * 100), 100)}%</div>
+                    <div className="text-blue-100 text-sm mb-6 flex justify-between">
+                      <span>${stats.totalRevenue.toLocaleString()}</span>
+                      <span className="opacity-60">$150,000</span>
+                    </div>
+                    <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((stats.totalRevenue / 150000) * 100, 100)}%` }}
+                        transition={{ duration: 1.5, delay: 0.5 }}
+                        className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                      />
+                    </div>
+                    <p className="text-xs text-blue-100 mt-4 opacity-80">Click to view detailed analytics →</p>
                   </div>
-                  <div className="text-4xl font-bold mb-2">{Math.min(Math.round((stats.totalRevenue / 150000) * 100), 100)}%</div>
-                  <div className="text-blue-100 text-sm mb-6 flex justify-between">
-                    <span>${stats.totalRevenue.toLocaleString()}</span>
-                    <span className="opacity-60">$150,000</span>
-                  </div>
-                  <div className="h-2 bg-black/20 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((stats.totalRevenue / 150000) * 100, 100)}%` }}
-                      transition={{ duration: 1.5, delay: 0.5 }}
-                      className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                    />
-                  </div>
-                </div>
-              </SpotlightCard>
-            </motion.div>
+                </SpotlightCard>
+              </Link>
+            </motion.div> */}
           </div>
         </div>
+        )}
       </motion.div>
     </div>
   );

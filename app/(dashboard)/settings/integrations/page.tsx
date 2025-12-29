@@ -136,7 +136,12 @@ export default function IntegrationsPage() {
   return (
     <div className="p-6 space-y-6 max-w-6xl">
       <div>
-        <h1 className="text-2xl font-bold">Integrations</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Integrations</h1>
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
+        </div>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Connect your favorite tools and services
         </p>

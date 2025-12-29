@@ -70,6 +70,13 @@ export default function BulkMessageWizard() {
 
   return (
     <div className="h-full flex flex-col p-6">
+      {/* Demo Badge */}
+      <div className="flex justify-center mb-4">
+        <span className="text-xs font-medium px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          📋 Demo Data - Bulk Messaging Preview
+        </span>
+      </div>
+
       {/* Progress Steps */}
       <div className="flex items-center justify-center mb-8">
         <div className="flex items-center gap-4">

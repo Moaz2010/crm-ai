@@ -39,20 +39,34 @@ export function LeadCapture({ onSuccess }: LeadCaptureProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          source: mode === 'url' ? url : undefined,
+          url: mode === 'url' ? url : undefined,
           text: mode === 'text' ? text : undefined,
-          sourceType: mode === 'url' ? 'linkedin' : 'text',
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.data) {
-        // Create the lead
+        // Create the lead with proper field mapping
+        const leadData = {
+          first_name: data.data.firstName || '',
+          last_name: data.data.lastName || '',
+          email: data.data.email || '',
+          phone: data.data.phone || '',
+          company_name: data.data.company || '',
+          job_title: data.data.jobTitle || '',
+          location: data.data.location || '',
+          linkedin_url: data.data.linkedinUrl || (mode === 'url' && url.includes('linkedin') ? url : ''),
+          website: data.data.website || '',
+          score: data.data.leadScore || 50,
+          status: 'new',
+          source_platform: mode === 'url' ? (url.includes('linkedin') ? 'linkedin' : 'website') : 'manual',
+        };
+        
         const createResponse = await fetch('/api/leads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data.data),
+          body: JSON.stringify(leadData),
         });
 
         if (createResponse.ok) {
@@ -63,7 +77,8 @@ export function LeadCapture({ onSuccess }: LeadCaptureProps) {
           });
           onSuccess?.();
         } else {
-          throw new Error('Failed to create lead');
+          const errData = await createResponse.json();
+          throw new Error(errData.error || 'Failed to create lead');
         }
       } else {
         throw new Error(data.error || 'Failed to parse lead');

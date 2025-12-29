@@ -115,6 +115,11 @@ export default function ConversationList({
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-white/5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input

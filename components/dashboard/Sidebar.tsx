@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -16,6 +17,8 @@ import {
   CheckSquare,
   Building2,
   BookUser,
+  Menu,
+  X,
 } from "lucide-react";
 import RealPyramidLogo from "@/components/ui/RealPyramidLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -40,8 +43,78 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <aside className="group relative flex h-screen w-20 hover:w-64 flex-col border-r border-black/5 dark:border-white/5 bg-white/10 dark:bg-black/10 backdrop-blur-xl text-black dark:text-white overflow-hidden transition-all duration-500 ease-in-out z-50 shadow-2xl">
+    <>
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
+        <div className="flex items-center gap-2">
+          <RealPyramidLogo />
+          <span className="font-bold text-lg">LeadCatch</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        >
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside
+        className={cn(
+          "lg:hidden fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-white dark:bg-gray-900 border-r border-black/5 dark:border-white/5 transform transition-transform duration-300 ease-in-out pt-14",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 transition-all hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div className="border-t border-black/5 dark:border-white/5 p-3 space-y-2">
+          <Link
+            href="/"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10"
+          >
+            <Globe className="h-4 w-4" />
+            <span>Public Site</span>
+          </Link>
+          <Link
+            href="/login"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </Link>
+          <div className="flex items-center gap-2 pt-2 border-t border-black/5 dark:border-white/5">
+            <ThemeToggle className="h-10 w-10 justify-center bg-transparent border-0 hover:bg-black/5 dark:hover:bg-white/10" />
+            <AnimationToggle className="h-10 w-10 border-0 bg-transparent hover:bg-black/5 dark:hover:bg-white/10" />
+          </div>
+        </div>
+      </aside>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex group relative h-screen w-20 hover:w-64 flex-col border-r border-black/5 dark:border-white/5 bg-white/10 dark:bg-black/10 backdrop-blur-xl text-black dark:text-white overflow-hidden transition-all duration-500 ease-in-out z-50 shadow-2xl">
       {/* Header */}
       <div className="relative z-20 flex h-20 items-center justify-center group-hover:justify-start group-hover:px-6 transition-all duration-500">
         <div className="flex items-center gap-3">
@@ -119,5 +192,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

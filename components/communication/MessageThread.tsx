@@ -168,6 +168,9 @@ export default function MessageThread({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
           <button className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
             <Phone className="h-4 w-4" />
           </button>

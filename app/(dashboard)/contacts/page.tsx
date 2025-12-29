@@ -14,19 +14,19 @@ export default function ContactsPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <UserCircle className="w-6 h-6 text-cyan-500" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <UserCircle className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-500" />
             Contacts
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
             Manage your contacts and relationships
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center border rounded-lg overflow-hidden">
             <Button
               variant={view === 'grid' ? 'secondary' : 'ghost'}
@@ -45,16 +45,17 @@ export default function ContactsPage() {
               <List className="w-4 h-4" />
             </Button>
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" size="sm">
             <Upload className="w-4 h-4" />
-            Import
+            <span className="hidden sm:inline">Import</span>
           </Button>
           <Button
             onClick={() => setCreateOpen(true)}
+            size="sm"
             className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
           >
             <Plus className="w-4 h-4" />
-            Add Contact
+            <span>Add</span>
           </Button>
         </div>
       </div>

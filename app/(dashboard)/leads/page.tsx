@@ -85,44 +85,78 @@ export default function LeadsPage() {
     });
   };
 
+  const handleExport = () => {
+    if (leads.length === 0) {
+      alert('No leads to export');
+      return;
+    }
+    
+    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Score', 'Created At'];
+    const csvContent = [
+      headers.join(','),
+      ...leads.map(lead => [
+        lead.first_name || '',
+        lead.last_name || '',
+        lead.email || '',
+        lead.phone || '',
+        lead.company_name || '',
+        lead.job_title || '',
+        lead.status || 'new',
+        lead.score || 0,
+        lead.created_at ? new Date(lead.created_at).toLocaleDateString() : ''
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leads_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="p-6 space-y-8 bg-transparent min-h-screen text-black dark:text-white">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 bg-transparent min-h-screen text-black dark:text-white">
+      <div className="flex flex-col gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
         >
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="w-7 h-7 text-indigo-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-500" />
             Leads
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
             AI-powered lead capture and enrichment
           </p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex gap-3"
+          className="flex flex-wrap gap-2 sm:gap-3"
         >
-          <button className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all"
+          >
             <Download className="h-4 w-4" />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </button>
           <Link href="/leads/import">
-            <button className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all">
+            <button className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all">
               <Upload className="h-4 w-4" />
-              Import
+              <span className="hidden sm:inline">Import</span>
             </button>
           </Link>
           <Dialog open={captureOpen} onOpenChange={setCaptureOpen}>
             <DialogTrigger asChild>
-              <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/20">
+              <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/20">
                 <Plus className="h-4 w-4" />
-                Add Lead
+                <span>Add Lead</span>
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-indigo-500" />
@@ -144,9 +178,9 @@ export default function LeadsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <SpotlightCard className="p-6 bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800">
+        <SpotlightCard className="p-4 sm:p-6 bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800">
           {/* Filters & Search */}
-          <div className="flex flex-col gap-4 sm:flex-row mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row mb-4 sm:mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <input
@@ -157,14 +191,59 @@ export default function LeadsPage() {
                 className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50 py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+            <button className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
               <Filter className="h-4 w-4" />
               Filters
             </button>
           </div>
 
-          {/* Table */}
-          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800">
+          {/* Mobile Cards View */}
+          <div className="block sm:hidden space-y-3">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            ) : filteredLeads.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No leads found. Start capturing leads to see them here!
+              </div>
+            ) : (
+              filteredLeads.map((lead) => (
+                <Link href={`/leads/${lead.id}`} key={lead.id}>
+                  <div className="p-4 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                          {(lead.first_name || 'U').charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {lead.first_name} {lead.last_name}
+                          </p>
+                          <p className="text-xs text-gray-500">{lead.email}</p>
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                          STATUS_COLORS[lead.status] || "bg-gray-500/10 text-gray-500"
+                        )}
+                      >
+                        {lead.status?.replace('_', ' ') || 'New'}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                      <span>{lead.company_name || 'No company'}</span>
+                      <span>Score: {lead.score || 0}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-gray-50 dark:bg-zinc-900/50 text-gray-600 dark:text-gray-400">
@@ -275,8 +354,8 @@ export default function LeadsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 px-6 py-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200 dark:border-zinc-800 px-4 sm:px-6 py-4">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
                 Showing{" "}
                 <span className="font-medium text-gray-900 dark:text-white">
                   {filteredLeads.length}

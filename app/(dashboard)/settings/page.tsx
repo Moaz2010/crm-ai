@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,9 +31,20 @@ import {
   Zap,
   Save,
   Upload,
+  Loader2,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SettingsPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    bio: '',
+  });
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -42,6 +53,67 @@ export default function SettingsPage() {
     dealClosed: true,
     appointmentReminder: true,
   });
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get user metadata
+        const metadata = user.user_metadata || {};
+        setProfile({
+          firstName: metadata.first_name || '',
+          lastName: metadata.last_name || '',
+          email: user.email || '',
+          phone: metadata.phone || '',
+          bio: metadata.bio || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.updateUser({
+        data: {
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          phone: profile.phone,
+          bio: profile.bio,
+        },
+      });
+      alert('Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getInitials = () => {
+    const first = profile.firstName?.[0] || '';
+    const last = profile.lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'U';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -89,7 +161,7 @@ export default function SettingsPage() {
                 <Avatar className="w-20 h-20">
                   <AvatarImage src="" alt="Profile" />
                   <AvatarFallback className="text-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                    JD
+                    {getInitials()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
@@ -108,29 +180,57 @@ export default function SettingsPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="John" defaultValue="John" />
+                  <Input 
+                    id="firstName" 
+                    placeholder="John" 
+                    value={profile.firstName}
+                    onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" defaultValue="Doe" />
+                  <Input 
+                    id="lastName" 
+                    placeholder="Doe" 
+                    value={profile.lastName}
+                    onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="john@example.com" defaultValue="john@example.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="john@example.com" 
+                    value={profile.email}
+                    disabled
+                    className="bg-gray-50 dark:bg-gray-800"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" placeholder="+1 (555) 123-4567" />
+                  <Input 
+                    id="phone" 
+                    placeholder="+1 (555) 123-4567"
+                    value={profile.phone}
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="bio">Bio</Label>
-                  <Textarea id="bio" placeholder="Tell us about yourself" className="resize-none" />
+                  <Textarea 
+                    id="bio" 
+                    placeholder="Tell us about yourself" 
+                    className="resize-none"
+                    value={profile.bio}
+                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  />
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button className="gap-2">
-                  <Save className="w-4 h-4" />
+                <Button className="gap-2" onClick={saveProfile} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Changes
                 </Button>
               </div>

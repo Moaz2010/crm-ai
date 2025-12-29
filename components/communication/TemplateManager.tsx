@@ -73,10 +73,15 @@ export default function TemplateManager() {
           <h2 className="text-2xl font-bold text-white">Templates</h2>
           <p className="text-gray-400">Manage your email and SMS templates</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium">
-          <Plus className="h-4 w-4" />
-          New Template
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
+          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium">
+            <Plus className="h-4 w-4" />
+            New Template
+          </button>
+        </div>
       </div>
 
       <div className="relative">

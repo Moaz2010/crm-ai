@@ -52,9 +52,18 @@ const industries = ['Technology', 'Software', 'Research', 'Analytics', 'Cloud Se
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [industryFilter, setIndustryFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newCompany, setNewCompany] = useState({
+    name: '',
+    domain: '',
+    industry: '',
+    size: '',
+    location: '',
+    description: '',
+  });
 
   useEffect(() => {
     fetchCompanies();
@@ -71,6 +80,28 @@ export default function CompaniesPage() {
       console.error('Error fetching companies:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateCompany = async () => {
+    if (!newCompany.name.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCompany),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setCompanies([result.data, ...companies]);
+        setIsDialogOpen(false);
+        setNewCompany({ name: '', domain: '', industry: '', size: '', location: '', description: '' });
+      }
+    } catch (error) {
+      console.error('Error creating company:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -102,23 +133,23 @@ export default function CompaniesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Companies</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Companies</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
             Manage your company accounts and relationships
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <Plus className="w-4 h-4" />
               Add Company
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Company</DialogTitle>
               <DialogDescription>
@@ -128,16 +159,26 @@ export default function CompaniesPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Company Name</Label>
-                <Input id="name" placeholder="Enter company name" />
+                <Input 
+                  id="name" 
+                  placeholder="Enter company name" 
+                  value={newCompany.name}
+                  onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="domain">Domain</Label>
-                <Input id="domain" placeholder="company.com" />
+                <Input 
+                  id="domain" 
+                  placeholder="company.com" 
+                  value={newCompany.domain}
+                  onChange={(e) => setNewCompany({ ...newCompany, domain: e.target.value })}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Industry</Label>
-                  <Select>
+                  <Select value={newCompany.industry} onValueChange={(v) => setNewCompany({ ...newCompany, industry: v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select industry" />
                     </SelectTrigger>
@@ -152,7 +193,7 @@ export default function CompaniesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Company Size</Label>
-                  <Select>
+                  <Select value={newCompany.size} onValueChange={(v) => setNewCompany({ ...newCompany, size: v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
@@ -169,60 +210,73 @@ export default function CompaniesPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="City, State" />
+                <Input 
+                  id="location" 
+                  placeholder="City, State" 
+                  value={newCompany.location}
+                  onChange={(e) => setNewCompany({ ...newCompany, location: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Brief description of the company" />
+                <Textarea 
+                  id="description" 
+                  placeholder="Brief description of the company"
+                  value={newCompany.description}
+                  onChange={(e) => setNewCompany({ ...newCompany, description: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => setIsDialogOpen(false)}>Add Company</Button>
+              <Button onClick={handleCreateCompany} disabled={saving || !newCompany.name.trim()}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Add Company
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.total}</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Companies</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Companies</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.totalContacts}</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Contacts</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.totalContacts}</div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Contacts</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.totalDeals}</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Active Deals</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.totalDeals}</div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Active Deals</p>
               </div>
             </div>
           </CardContent>

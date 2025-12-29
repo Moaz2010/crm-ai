@@ -63,8 +63,13 @@ export default function BillingPage() {
   return (
     <div className="p-6 space-y-8 max-w-6xl">
       <div>
-        <h1 className="text-2xl font-bold">Billing</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-2xl font-bold">Billing</h1>
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
+        </div>
+        <p className="text-gray-500 dark:text-gray-400">
           Manage your subscription and payment methods
         </p>
       </div>

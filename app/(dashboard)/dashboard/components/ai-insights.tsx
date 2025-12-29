@@ -102,6 +102,9 @@ export function AIInsights() {
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           AI Insights
+          <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            📋 Demo Data
+          </span>
         </CardTitle>
         <Button
           variant="ghost"
