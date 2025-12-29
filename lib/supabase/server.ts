@@ -36,34 +36,54 @@ export async function createClient() {
 /**
  * Ensures a user profile exists in the profiles table.
  * This is needed because foreign keys reference profiles(id), not auth.users(id).
- * Creates the profile if it doesn't exist.
+ * If profile doesn't exist, tries to create it.
  */
 export async function ensureUserProfile(supabase: any, user: { id: string; email?: string }) {
-  // Check if profile exists
-  const { data: existingProfile, error: checkError } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', user.id)
-    .single();
+  try {
+    // First, just check if profile exists
+    const { data: existing, error: selectError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
 
-  if (existingProfile) {
-    return { success: true, profileId: existingProfile.id };
+    if (existing) {
+      return { success: true, profileId: existing.id };
+    }
+
+    // Profile doesn't exist - try to create it
+    // This requires the INSERT policy to be set up correctly
+    const { data: newProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .maybeSingle();
+
+    if (insertError) {
+      // If insert failed, check one more time if profile was created by trigger
+      const { data: retryCheck } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (retryCheck) {
+        return { success: true, profileId: retryCheck.id };
+      }
+
+      console.error('Profile creation failed:', insertError.message);
+      // Return success anyway to let the actual insert show the real error
+      return { success: true, profileId: user.id };
+    }
+
+    return { success: true, profileId: newProfile?.id || user.id };
+  } catch (err) {
+    console.error('ensureUserProfile unexpected error:', err);
+    return { success: true, profileId: user.id };
   }
-
-  // Profile doesn't exist, create it
-  const { data: newProfile, error: createError } = await supabase
-    .from('profiles')
-    .insert({
-      id: user.id,
-      email: user.email || '',
-    })
-    .select()
-    .single();
-
-  if (createError) {
-    console.error('Failed to create user profile:', createError);
-    return { success: false, error: createError };
-  }
-
-  return { success: true, profileId: newProfile.id };
 }
