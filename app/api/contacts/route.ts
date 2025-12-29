@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, ensureUserProfile } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,6 +69,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // Ensure user profile exists (foreign key requirement)
+    const profileResult = await ensureUserProfile(supabase, user);
+    if (!profileResult.success) {
+      return NextResponse.json({ error: 'Failed to verify user profile' }, { status: 500 });
+    }
 
     const { data, error } = await supabase
       .from('contacts')

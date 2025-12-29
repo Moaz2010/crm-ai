@@ -96,35 +96,28 @@ export default function TasksPage() {
     
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Please log in to create tasks');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          user_id: user.id,
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           title: newTask.title,
           description: newTask.description || null,
           type: newTask.type,
           priority: newTask.priority,
-          status: 'pending',
-          due_date: newTask.due_date || null,
-        })
-        .select()
-        .single();
+          dueDate: newTask.due_date || null,
+        }),
+      });
 
-      if (error) {
-        console.error('Task creation error:', error);
-        alert('Failed to create task: ' + error.message);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Task creation error:', result.error);
+        alert('Failed to create task: ' + (result.error || 'Unknown error'));
         return;
       }
 
-      if (data) {
-        setTasks([data, ...tasks]);
+      if (result.data) {
+        setTasks([result.data, ...tasks]);
         setIsDialogOpen(false);
         setNewTask({
           title: '',

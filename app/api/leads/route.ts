@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, ensureUserProfile } from '@/lib/supabase/server';
 import { quickScore } from '@/modules/leadcatch/services/lead-scoring';
 
 // GET /api/leads
@@ -120,6 +120,15 @@ export async function POST(request: NextRequest) {
     
     // Calculate lead score
     const leadScore = quickScore(body);
+
+    // Ensure user profile exists (foreign key requirement)
+    const profileResult = await ensureUserProfile(supabase, user);
+    if (!profileResult.success) {
+      return NextResponse.json(
+        { error: 'Failed to verify user profile' },
+        { status: 500 }
+      );
+    }
     
     // Create lead
     const { data: lead, error } = await supabase

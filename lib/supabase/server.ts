@@ -32,3 +32,38 @@ export async function createClient() {
     },
   );
 }
+
+/**
+ * Ensures a user profile exists in the profiles table.
+ * This is needed because foreign keys reference profiles(id), not auth.users(id).
+ * Creates the profile if it doesn't exist.
+ */
+export async function ensureUserProfile(supabase: any, user: { id: string; email?: string }) {
+  // Check if profile exists
+  const { data: existingProfile, error: checkError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .single();
+
+  if (existingProfile) {
+    return { success: true, profileId: existingProfile.id };
+  }
+
+  // Profile doesn't exist, create it
+  const { data: newProfile, error: createError } = await supabase
+    .from('profiles')
+    .insert({
+      id: user.id,
+      email: user.email || '',
+    })
+    .select()
+    .single();
+
+  if (createError) {
+    console.error('Failed to create user profile:', createError);
+    return { success: false, error: createError };
+  }
+
+  return { success: true, profileId: newProfile.id };
+}
