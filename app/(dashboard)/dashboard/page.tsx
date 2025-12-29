@@ -524,7 +524,7 @@ export default function DashboardPage() {
                   </div>
                 </SpotlightCard>
               </Link>
-            </motion.div> */}
+            // </motion.div> */}
           </div>
         </div>
         )}
