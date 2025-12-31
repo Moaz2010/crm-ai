@@ -122,6 +122,18 @@ export default function MessageThread({
     scrollToBottom();
   }, [messages]);
 
+  // Load messages from localStorage for the conversation
+  useEffect(() => {
+    if (conversationId && typeof window !== 'undefined') {
+      const savedMessages = localStorage.getItem(`messages_${conversationId}`);
+      if (savedMessages) {
+        setMessages(JSON.parse(savedMessages));
+      } else {
+        setMessages(MOCK_MESSAGES);
+      }
+    }
+  }, [conversationId]);
+
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
@@ -136,8 +148,48 @@ export default function MessageThread({
       type: "text",
     };
 
-    setMessages([...messages, newMsg]);
+    const updatedMessages = [...messages, newMsg];
+    setMessages(updatedMessages);
     setInputValue("");
+    
+    // Save to localStorage
+    if (conversationId && typeof window !== 'undefined') {
+      localStorage.setItem(`messages_${conversationId}`, JSON.stringify(updatedMessages));
+    }
+
+    // Simulate a response after 1-2 seconds (demo behavior)
+    setTimeout(() => {
+      const responses = [
+        "Thanks for the message! I'll get back to you shortly.",
+        "Got it, let me check on that.",
+        "Perfect, I'll review this and follow up.",
+        "That sounds good to me!",
+        "Let me think about that and get back to you.",
+      ];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      const responseMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: "them",
+        content: randomResponse,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        type: "text",
+      };
+      const withResponse = [...updatedMessages, responseMsg];
+      setMessages(withResponse);
+      if (conversationId && typeof window !== 'undefined') {
+        localStorage.setItem(`messages_${conversationId}`, JSON.stringify(withResponse));
+      }
+    }, 1000 + Math.random() * 1000);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   if (!conversationId) {
@@ -231,6 +283,7 @@ export default function MessageThread({
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Type a message..."
               className="w-full h-full bg-transparent border-none focus:ring-0 text-sm text-white placeholder:text-gray-500 resize-none py-3 max-h-32 custom-scrollbar"
               style={{ height: "auto" }}

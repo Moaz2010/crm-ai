@@ -45,10 +45,20 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
       const response = await fetch('/api/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          title: formData.title || null,
+          lifecycle_stage: formData.lifecycle_stage,
+          location: formData.location || null,
+          linkedin_url: formData.linkedin_url || null,
+        }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+      if (response.ok && result.data) {
         onOpenChange(false);
         setFormData({
           first_name: '',
@@ -62,10 +72,11 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
         });
         window.location.reload();
       } else {
-        throw new Error('Failed to create contact');
+        alert('Failed to create contact: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error creating contact:', error);
+      alert('Failed to create contact. Please try again.');
     } finally {
       setLoading(false);
     }

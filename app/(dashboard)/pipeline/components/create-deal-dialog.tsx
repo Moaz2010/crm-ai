@@ -45,8 +45,10 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          title: formData.name, // Use title as the main field
           name: formData.name,
           value: parseFloat(formData.value) || 0,
+          stage: formData.stage_id, // Use stage instead of stage_id
           stage_id: formData.stage_id,
           expected_close_date: formData.expected_close_date,
           notes: formData.notes,

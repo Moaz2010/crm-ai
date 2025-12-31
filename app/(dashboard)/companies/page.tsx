@@ -90,16 +90,26 @@ export default function CompaniesPage() {
       const response = await fetch('/api/companies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCompany),
+        body: JSON.stringify({
+          name: newCompany.name,
+          website: newCompany.domain || null,
+          industry: newCompany.industry || null,
+          size: newCompany.size || null,
+          location: newCompany.location || null,
+          description: newCompany.description || null,
+        }),
       });
-      if (response.ok) {
-        const result = await response.json();
+      const result = await response.json();
+      if (response.ok && result.data) {
         setCompanies([result.data, ...companies]);
         setIsDialogOpen(false);
         setNewCompany({ name: '', domain: '', industry: '', size: '', location: '', description: '' });
+      } else {
+        alert('Failed to create company: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error creating company:', error);
+      alert('Failed to create company. Please try again.');
     } finally {
       setSaving(false);
     }

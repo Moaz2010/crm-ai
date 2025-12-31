@@ -37,7 +37,7 @@ function RadarWidget({ leads }: { leads: any[] }) {
         ];
 
   return (
-    <div className="relative flex items-center justify-center w-full h-full min-h-[300px] overflow-hidden rounded-full bg-gradient-to-b from-black/5 to-transparent dark:from-white/5 dark:to-transparent border border-black/10 dark:border-white/10">
+    <div className="relative flex items-center justify-center w-full h-full min-h-[300px] rounded-full bg-gradient-to-b from-black/5 to-transparent dark:from-white/5 dark:to-transparent border border-black/10 dark:border-white/10">
       {/* Grid Lines */}
       {[1, 2, 3, 4].map((i) => (
         <div
@@ -406,8 +406,8 @@ export default function DashboardPage() {
                 <SpotlightCard className="p-5 bg-white dark:bg-zinc-900/50 border-gray-200 dark:border-zinc-800">
                   <div className="text-gray-500 text-xs font-medium mb-2">Conversion Rate</div>
                   <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{stats.conversionRate}%</div>
-                  <div className="text-green-500 text-xs flex items-center mt-2 font-medium bg-green-500/10 w-fit px-2 py-1 rounded-full">
-                    <ArrowUpRight className="h-3 w-3 mr-1" /> +0.4%
+                  <div className="text-gray-500 text-xs mt-2 font-medium">
+                    {stats.totalDeals} of {stats.totalLeads} leads converted
                   </div>
                 </SpotlightCard>
               </motion.div>
@@ -417,8 +417,8 @@ export default function DashboardPage() {
                   <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                     ${stats.totalDeals > 0 ? Math.round(stats.totalRevenue / stats.totalDeals).toLocaleString() : 0}
                   </div>
-                  <div className="text-green-500 text-xs flex items-center mt-2 font-medium bg-green-500/10 w-fit px-2 py-1 rounded-full">
-                    <ArrowUpRight className="h-3 w-3 mr-1" /> +12%
+                  <div className="text-gray-500 text-xs mt-2 font-medium">
+                    Total: ${stats.totalRevenue.toLocaleString()}
                   </div>
                 </SpotlightCard>
               </motion.div>
