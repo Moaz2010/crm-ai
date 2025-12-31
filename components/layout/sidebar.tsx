@@ -20,6 +20,7 @@ import {
   LogOut,
   Menu,
   X,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
@@ -40,6 +41,7 @@ const mainNavItems: NavItem[] = [
   { title: 'Pipeline', href: '/pipeline', icon: Kanban },
   { title: 'Tasks', href: '/tasks', icon: CheckSquare },
   { title: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { title: 'Diagrams', href: '/diagrams', icon: Layers, badge: 'UML' },
 ];
 
 const bottomNavItems: NavItem[] = [
