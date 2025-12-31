@@ -86,79 +86,104 @@ const getDiagramComponent = (type: DiagramType, isDarkMode: boolean) => {
 };
 
 // Markdown renderer for chat messages
-const renderMarkdown = (text: string) => {
-  const parts: (string | JSX.Element)[] = [];
-  let remaining = text;
-  let keyIndex = 0;
-
-  // Handle code blocks first
-  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
-  let processedText = "";
-  const codeBlocks: { placeholder: string; content: string; language: string }[] = [];
-
-  while ((match = codeBlockRegex.exec(remaining)) !== null) {
-    processedText += remaining.slice(lastIndex, match.index);
-    const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-    codeBlocks.push({
-      placeholder,
-      content: match[2],
-      language: match[1] || "text",
-    });
-    processedText += placeholder;
-    lastIndex = match.index + match[0].length;
+const renderMarkdown = (text: string | undefined | null): React.ReactNode => {
+  // Handle undefined/null/empty text
+  if (!text || typeof text !== 'string') {
+    return null;
   }
-  processedText += remaining.slice(lastIndex);
 
-  // Split by lines for better rendering
-  const lines = processedText.split("\n");
+  const lines = text.split("\n");
   
   return lines.map((line, lineIndex) => {
-    // Check for code block placeholder
-    const codeBlockMatch = line.match(/__CODE_BLOCK_(\d+)__/);
-    if (codeBlockMatch) {
-      const block = codeBlocks[parseInt(codeBlockMatch[1])];
-      return (
-        <pre key={`code-${lineIndex}`} className="bg-gray-800 text-green-400 p-3 rounded-lg my-2 overflow-x-auto text-sm">
-          <code>{block.content}</code>
-        </pre>
-      );
+    // Check for code blocks ```code```
+    if (line.startsWith("```")) {
+      return null; // Skip code block markers
     }
 
     // Process inline formatting
-    let processed = line;
-    const elements: (string | JSX.Element)[] = [];
-    
-    // Bold: **text**
-    const boldRegex = /\*\*([^*]+)\*\*/g;
-    let lastIdx = 0;
-    let boldMatch;
-    
-    while ((boldMatch = boldRegex.exec(processed)) !== null) {
-      if (boldMatch.index > lastIdx) {
-        elements.push(processed.slice(lastIdx, boldMatch.index));
+    let elements: React.ReactNode[] = [];
+    let currentText = line;
+    let keyCounter = 0;
+
+    // Process bold **text**
+    const boldParts = currentText.split(/\*\*([^*]+)\*\*/g);
+    if (boldParts.length > 1) {
+      elements = boldParts.map((part, i) => {
+        if (i % 2 === 1) {
+          return <strong key={`bold-${lineIndex}-${i}`} className="font-bold">{part}</strong>;
+        }
+        return part;
+      }).filter(Boolean);
+    } else {
+      // Process italic *text*
+      const italicParts = currentText.split(/\*([^*]+)\*/g);
+      if (italicParts.length > 1) {
+        elements = italicParts.map((part, i) => {
+          if (i % 2 === 1) {
+            return <em key={`italic-${lineIndex}-${i}`} className="italic">{part}</em>;
+          }
+          return part;
+        }).filter(Boolean);
+      } else {
+        // Process inline code `code`
+        const codeParts = currentText.split(/`([^`]+)`/g);
+        if (codeParts.length > 1) {
+          elements = codeParts.map((part, i) => {
+            if (i % 2 === 1) {
+              return (
+                <code key={`code-${lineIndex}-${i}`} className="bg-gray-700 text-green-400 px-1.5 py-0.5 rounded text-xs font-mono">
+                  {part}
+                </code>
+              );
+            }
+            return part;
+          }).filter(Boolean);
+        } else {
+          elements = [currentText];
+        }
       }
-      elements.push(
-        <strong key={`bold-${lineIndex}-${boldMatch.index}`} className="font-semibold">
-          {boldMatch[1]}
-        </strong>
+    }
+
+    // Handle bullet points
+    if (line.trim().startsWith("- ") || line.trim().startsWith("• ")) {
+      return (
+        <div key={`line-${lineIndex}`} className="flex items-start gap-2 my-1">
+          <span className="text-blue-400 mt-0.5">•</span>
+          <span>{elements.length > 0 ? elements : line.slice(2)}</span>
+        </div>
       );
-      lastIdx = boldMatch.index + boldMatch[0].length;
     }
-    
-    if (lastIdx < processed.length) {
-      elements.push(processed.slice(lastIdx));
+
+    // Handle numbered lists
+    const numberedMatch = line.trim().match(/^(\d+)\.\s+(.*)$/);
+    if (numberedMatch) {
+      return (
+        <div key={`line-${lineIndex}`} className="flex items-start gap-2 my-1">
+          <span className="text-blue-400 font-medium min-w-[1.5rem]">{numberedMatch[1]}.</span>
+          <span>{numberedMatch[2]}</span>
+        </div>
+      );
     }
-    
-    // If no formatting was applied, use original
-    if (elements.length === 0) {
-      elements.push(processed);
+
+    // Handle headers
+    if (line.startsWith("### ")) {
+      return <h4 key={`line-${lineIndex}`} className="font-bold text-sm mt-3 mb-1">{line.slice(4)}</h4>;
+    }
+    if (line.startsWith("## ")) {
+      return <h3 key={`line-${lineIndex}`} className="font-bold text-base mt-3 mb-1">{line.slice(3)}</h3>;
+    }
+    if (line.startsWith("# ")) {
+      return <h2 key={`line-${lineIndex}`} className="font-bold text-lg mt-3 mb-1">{line.slice(2)}</h2>;
+    }
+
+    // Empty line = paragraph break
+    if (line.trim() === "") {
+      return <div key={`line-${lineIndex}`} className="h-2" />;
     }
 
     return (
       <span key={`line-${lineIndex}`}>
-        {elements}
+        {elements.length > 0 ? elements : line}
         {lineIndex < lines.length - 1 && <br />}
       </span>
     );
@@ -473,7 +498,7 @@ export default function ArchitecturePage() {
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className={`absolute bottom-16 right-0 w-96 rounded-2xl shadow-2xl overflow-hidden ${
+              className={`absolute bottom-16 right-0 w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-2xl overflow-hidden ${
                 isDarkMode 
                   ? "bg-gray-900 border border-gray-800" 
                   : "bg-white border border-gray-200"
@@ -501,35 +526,53 @@ export default function ArchitecturePage() {
               </div>
 
               {/* Chat Messages */}
-              <div className={`h-80 overflow-y-auto p-4 space-y-3 ${
+              <div className={`max-h-[450px] min-h-[300px] overflow-y-auto p-4 space-y-4 ${
                 isDarkMode ? "bg-gray-900" : "bg-gray-50"
               }`}>
                 {messages.map((msg, index) => (
-                  <div
+                  <motion.div
                     key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${
+                      className={`max-w-[90%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                         msg.role === "user"
-                          ? "bg-blue-600 text-white rounded-br-md"
+                          ? "bg-blue-600 text-white rounded-br-sm"
                           : isDarkMode
-                          ? "bg-gray-800 text-gray-200 rounded-bl-md"
-                          : "bg-white text-gray-800 rounded-bl-md shadow-sm"
+                          ? "bg-gray-800 text-gray-200 rounded-bl-sm border border-gray-700"
+                          : "bg-white text-gray-800 rounded-bl-sm shadow-md border border-gray-100"
                       }`}
                     >
-                      <div className="whitespace-pre-wrap">{renderMarkdown(msg.content)}</div>
+                      <div className="prose prose-sm max-w-none">
+                        {renderMarkdown(msg.content)}
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
                 {isLoading && (
-                  <div className="flex justify-start">
-                    <div className={`px-4 py-2 rounded-2xl rounded-bl-md ${
-                      isDarkMode ? "bg-gray-800" : "bg-white shadow-sm"
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className={`px-4 py-3 rounded-2xl rounded-bl-sm ${
+                      isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white shadow-md border border-gray-100"
                     }`}>
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                          Thinking...
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
                 <div ref={chatEndRef} />
               </div>
@@ -544,18 +587,18 @@ export default function ArchitecturePage() {
                     type="text"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
                     placeholder="Ask about the architecture..."
-                    className={`flex-1 px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       isDarkMode 
-                        ? "bg-gray-800 text-white placeholder-gray-500" 
-                        : "bg-gray-100 text-gray-900 placeholder-gray-400"
+                        ? "bg-gray-800 text-white placeholder-gray-500 border border-gray-700" 
+                        : "bg-gray-100 text-gray-900 placeholder-gray-400 border border-gray-200"
                     }`}
                   />
                   <button
                     onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
-                    className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                   >
                     <Send className="w-5 h-5" />
                   </button>

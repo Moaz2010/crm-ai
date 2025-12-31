@@ -38,47 +38,105 @@ interface ChatMessage {
 }
 
 // Simple markdown renderer for chat messages
-const renderMarkdown = (text: string) => {
-  // Split by code blocks first
-  const parts = text.split(/(```[\s\S]*?```|`[^`]+`)/);
+const renderMarkdown = (text: string | undefined | null): React.ReactNode => {
+  // Handle undefined/null/empty text
+  if (!text || typeof text !== 'string') {
+    return null;
+  }
+
+  const lines = text.split("\n");
   
-  return parts.map((part, index) => {
-    // Code blocks
-    if (part.startsWith('```') && part.endsWith('```')) {
-      const code = part.slice(3, -3).replace(/^\w+\n/, '');
+  return lines.map((line, lineIndex) => {
+    // Skip code block markers
+    if (line.startsWith("```")) {
+      return null;
+    }
+
+    // Process inline formatting
+    let elements: React.ReactNode[] = [];
+
+    // Process bold **text**
+    const boldParts = line.split(/\*\*([^*]+)\*\*/g);
+    if (boldParts.length > 1) {
+      elements = boldParts.map((part, i) => {
+        if (i % 2 === 1) {
+          return <strong key={`bold-${lineIndex}-${i}`} className="font-bold">{part}</strong>;
+        }
+        return part;
+      }).filter(Boolean);
+    } else {
+      // Process italic *text*
+      const italicParts = line.split(/\*([^*]+)\*/g);
+      if (italicParts.length > 1) {
+        elements = italicParts.map((part, i) => {
+          if (i % 2 === 1) {
+            return <em key={`italic-${lineIndex}-${i}`} className="italic">{part}</em>;
+          }
+          return part;
+        }).filter(Boolean);
+      } else {
+        // Process inline code `code`
+        const codeParts = line.split(/`([^`]+)`/g);
+        if (codeParts.length > 1) {
+          elements = codeParts.map((part, i) => {
+            if (i % 2 === 1) {
+              return (
+                <code key={`code-${lineIndex}-${i}`} className="bg-gray-700 text-green-400 px-1.5 py-0.5 rounded text-xs font-mono">
+                  {part}
+                </code>
+              );
+            }
+            return part;
+          }).filter(Boolean);
+        } else {
+          elements = [line];
+        }
+      }
+    }
+
+    // Handle bullet points
+    if (line.trim().startsWith("- ") || line.trim().startsWith("• ")) {
       return (
-        <pre key={index} className="bg-gray-800 text-green-400 p-2 rounded text-xs my-2 overflow-x-auto">
-          <code>{code}</code>
-        </pre>
+        <div key={`line-${lineIndex}`} className="flex items-start gap-2 my-1">
+          <span className="text-blue-400 mt-0.5">•</span>
+          <span>{elements.length > 0 ? elements : line.slice(2)}</span>
+        </div>
       );
     }
-    // Inline code
-    if (part.startsWith('`') && part.endsWith('`')) {
+
+    // Handle numbered lists
+    const numberedMatch = line.trim().match(/^(\d+)\.\s+(.*)$/);
+    if (numberedMatch) {
       return (
-        <code key={index} className="bg-gray-200 text-gray-800 px-1 rounded text-xs">
-          {part.slice(1, -1)}
-        </code>
+        <div key={`line-${lineIndex}`} className="flex items-start gap-2 my-1">
+          <span className="text-blue-400 font-medium min-w-[1.5rem]">{numberedMatch[1]}.</span>
+          <span>{numberedMatch[2]}</span>
+        </div>
       );
     }
-    // Process bold, italic, and line breaks
-    const processed = part
-      .split(/(\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_)/)
-      .map((segment, i) => {
-        if (segment.startsWith('**') && segment.endsWith('**')) {
-          return <strong key={i}>{segment.slice(2, -2)}</strong>;
-        }
-        if (segment.startsWith('__') && segment.endsWith('__')) {
-          return <strong key={i}>{segment.slice(2, -2)}</strong>;
-        }
-        if (segment.startsWith('*') && segment.endsWith('*') && segment.length > 2) {
-          return <em key={i}>{segment.slice(1, -1)}</em>;
-        }
-        if (segment.startsWith('_') && segment.endsWith('_') && segment.length > 2) {
-          return <em key={i}>{segment.slice(1, -1)}</em>;
-        }
-        return segment;
-      });
-    return <span key={index}>{processed}</span>;
+
+    // Handle headers
+    if (line.startsWith("### ")) {
+      return <h4 key={`line-${lineIndex}`} className="font-bold text-sm mt-3 mb-1">{line.slice(4)}</h4>;
+    }
+    if (line.startsWith("## ")) {
+      return <h3 key={`line-${lineIndex}`} className="font-bold text-base mt-3 mb-1">{line.slice(3)}</h3>;
+    }
+    if (line.startsWith("# ")) {
+      return <h2 key={`line-${lineIndex}`} className="font-bold text-lg mt-3 mb-1">{line.slice(2)}</h2>;
+    }
+
+    // Empty line = paragraph break
+    if (line.trim() === "") {
+      return <div key={`line-${lineIndex}`} className="h-2" />;
+    }
+
+    return (
+      <span key={`line-${lineIndex}`}>
+        {elements.length > 0 ? elements : line}
+        {lineIndex < lines.length - 1 && <br />}
+      </span>
+    );
   });
 };
 
@@ -309,8 +367,12 @@ const AIChatBubble = ({ diagramType, diagramTitle, isDarkMode }: { diagramType: 
                   <div className={`rounded-2xl rounded-bl-md px-4 py-3 ${
                     isDarkMode ? "bg-gray-800" : "bg-gray-100"
                   }`}>
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
                       <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
                         Thinking...
                       </span>

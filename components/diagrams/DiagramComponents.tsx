@@ -6,8 +6,183 @@ interface DiagramProps {
   isDarkMode?: boolean;
 }
 
-// ============ ERD DIAGRAM - Like the Student/Course/Professor Example ============
-export const ERDDiagram: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
+// ============ ERD LEVEL 0 - Chen Notation (Conceptual) ============
+export const ERDLevel0: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
+  const textColor = isDarkMode ? "#e5e7eb" : "#1f2937";
+  const subTextColor = isDarkMode ? "#9ca3af" : "#4b5563";
+  const strokeColor = isDarkMode ? "#9ca3af" : "#374151";
+  const entityFill = isDarkMode ? "#374151" : "#fef3c7";
+  const entityStroke = isDarkMode ? "#fbbf24" : "#f59e0b";
+  const attrFill = isDarkMode ? "#1f2937" : "white";
+  const keyAttrFill = isDarkMode ? "#1e3a5f" : "#dbeafe";
+  const multiAttrStroke = isDarkMode ? "#9ca3af" : "#374151";
+  const derivedStroke = isDarkMode ? "#6b7280" : "#6b7280";
+  const relationFill = isDarkMode ? "#1e3a5f" : "#e0f2fe";
+  const relationStroke = isDarkMode ? "#3b82f6" : "#0284c7";
+  
+  return (
+    <svg viewBox="0 0 900 650" className="w-full h-full">
+      {/* Title */}
+      <text x="450" y="30" textAnchor="middle" className="text-xl font-bold" fill={textColor}>
+        ERD (Level 0) - Chen Notation - Conceptual Model
+      </text>
+      <text x="450" y="50" textAnchor="middle" className="text-sm" fill={subTextColor}>
+        Entities with attributes shown as ovals
+      </text>
+
+      {/* ========== LEAD ENTITY ========== */}
+      <g>
+        {/* Entity Rectangle */}
+        <rect x="350" y="250" width="120" height="50" fill={entityFill} stroke={entityStroke} strokeWidth="3" />
+        <text x="410" y="280" textAnchor="middle" className="text-sm font-bold" fill={textColor}>LEAD</text>
+
+        {/* Primary Key: lead_id (underlined oval) */}
+        <ellipse cx="410" cy="160" rx="50" ry="20" fill={keyAttrFill} stroke={strokeColor} strokeWidth="2" />
+        <text x="410" y="165" textAnchor="middle" className="text-xs font-semibold" fill={textColor} textDecoration="underline">lead_id</text>
+        <line x1="410" y1="180" x2="410" y2="250" stroke={strokeColor} strokeWidth="1.5" />
+
+        {/* first_name */}
+        <ellipse cx="280" cy="180" rx="45" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="280" y="184" textAnchor="middle" className="text-xs" fill={textColor}>first_name</text>
+        <line x1="310" y1="193" x2="360" y2="250" stroke={strokeColor} strokeWidth="1" />
+
+        {/* last_name */}
+        <ellipse cx="200" cy="230" rx="45" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="200" y="234" textAnchor="middle" className="text-xs" fill={textColor}>last_name</text>
+        <line x1="240" y1="238" x2="350" y2="265" stroke={strokeColor} strokeWidth="1" />
+
+        {/* email */}
+        <ellipse cx="200" cy="290" rx="35" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="200" y="294" textAnchor="middle" className="text-xs" fill={textColor}>email</text>
+        <line x1="235" y1="290" x2="350" y2="280" stroke={strokeColor} strokeWidth="1" />
+
+        {/* Multi-valued: phone (double oval) */}
+        <ellipse cx="280" cy="350" rx="40" ry="18" fill={attrFill} stroke={multiAttrStroke} strokeWidth="1.5" />
+        <ellipse cx="280" cy="350" rx="34" ry="14" fill="none" stroke={multiAttrStroke} strokeWidth="1" />
+        <text x="280" y="354" textAnchor="middle" className="text-xs" fill={textColor}>phone</text>
+        <line x1="305" y1="335" x2="360" y2="300" stroke={strokeColor} strokeWidth="1" />
+
+        {/* Derived: lead_score (dashed oval) */}
+        <ellipse cx="540" cy="180" rx="50" ry="18" fill={attrFill} stroke={derivedStroke} strokeWidth="1.5" strokeDasharray="5,3" />
+        <text x="540" y="184" textAnchor="middle" className="text-xs" fill={textColor}>lead_score</text>
+        <line x1="510" y1="193" x2="460" y2="250" stroke={strokeColor} strokeWidth="1" />
+
+        {/* status */}
+        <ellipse cx="540" cy="230" rx="35" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="540" y="234" textAnchor="middle" className="text-xs" fill={textColor}>status</text>
+        <line x1="510" y1="238" x2="470" y2="260" stroke={strokeColor} strokeWidth="1" />
+
+        {/* created_at */}
+        <ellipse cx="540" cy="290" rx="45" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="540" y="294" textAnchor="middle" className="text-xs" fill={textColor}>created_at</text>
+        <line x1="500" y1="290" x2="470" y2="280" stroke={strokeColor} strokeWidth="1" />
+      </g>
+
+      {/* ========== USER ENTITY ========== */}
+      <g>
+        <rect x="70" y="450" width="100" height="50" fill={entityFill} stroke={entityStroke} strokeWidth="3" />
+        <text x="120" y="480" textAnchor="middle" className="text-sm font-bold" fill={textColor}>USER</text>
+
+        {/* user_id (PK) */}
+        <ellipse cx="50" cy="400" rx="40" ry="18" fill={keyAttrFill} stroke={strokeColor} strokeWidth="2" />
+        <text x="50" y="404" textAnchor="middle" className="text-xs font-semibold" fill={textColor} textDecoration="underline">user_id</text>
+        <line x1="70" y1="415" x2="100" y2="450" stroke={strokeColor} strokeWidth="1" />
+
+        {/* email */}
+        <ellipse cx="50" cy="520" rx="35" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="50" y="524" textAnchor="middle" className="text-xs" fill={textColor}>email</text>
+        <line x1="70" y1="505" x2="100" y2="500" stroke={strokeColor} strokeWidth="1" />
+
+        {/* full_name */}
+        <ellipse cx="180" cy="540" rx="45" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="180" y="544" textAnchor="middle" className="text-xs" fill={textColor}>full_name</text>
+        <line x1="160" y1="525" x2="140" y2="500" stroke={strokeColor} strokeWidth="1" />
+      </g>
+
+      {/* ========== COMPANY ENTITY ========== */}
+      <g>
+        <rect x="700" y="450" width="120" height="50" fill={entityFill} stroke={entityStroke} strokeWidth="3" />
+        <text x="760" y="480" textAnchor="middle" className="text-sm font-bold" fill={textColor}>COMPANY</text>
+
+        {/* company_id (PK) */}
+        <ellipse cx="820" cy="400" rx="50" ry="18" fill={keyAttrFill} stroke={strokeColor} strokeWidth="2" />
+        <text x="820" y="404" textAnchor="middle" className="text-xs font-semibold" fill={textColor} textDecoration="underline">company_id</text>
+        <line x1="800" y1="415" x2="780" y2="450" stroke={strokeColor} strokeWidth="1" />
+
+        {/* name */}
+        <ellipse cx="850" cy="520" rx="35" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="850" y="524" textAnchor="middle" className="text-xs" fill={textColor}>name</text>
+        <line x1="830" y1="505" x2="800" y2="500" stroke={strokeColor} strokeWidth="1" />
+
+        {/* domain */}
+        <ellipse cx="700" cy="540" rx="40" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="700" y="544" textAnchor="middle" className="text-xs" fill={textColor}>domain</text>
+        <line x1="720" y1="525" x2="740" y2="500" stroke={strokeColor} strokeWidth="1" />
+
+        {/* industry */}
+        <ellipse cx="620" cy="490" rx="40" ry="18" fill={attrFill} stroke={strokeColor} strokeWidth="1.5" />
+        <text x="620" y="494" textAnchor="middle" className="text-xs" fill={textColor}>industry</text>
+        <line x1="660" y1="485" x2="700" y2="475" stroke={strokeColor} strokeWidth="1" />
+      </g>
+
+      {/* ========== RELATIONSHIPS (Diamonds) ========== */}
+      {/* USER --(creates)--> LEAD */}
+      <g>
+        <polygon points="250,400 290,425 250,450 210,425" fill={relationFill} stroke={relationStroke} strokeWidth="2" />
+        <text x="250" y="430" textAnchor="middle" className="text-xs font-semibold" fill={textColor}>creates</text>
+        {/* Connection lines */}
+        <line x1="170" y1="460" x2="210" y2="430" stroke={strokeColor} strokeWidth="1.5" />
+        <line x1="290" y1="410" x2="360" y2="300" stroke={strokeColor} strokeWidth="1.5" />
+        {/* Cardinality */}
+        <text x="185" y="438" className="text-xs font-bold" fill={textColor}>1</text>
+        <text x="320" y="370" className="text-xs font-bold" fill={textColor}>N</text>
+      </g>
+
+      {/* LEAD --(belongs_to)--> COMPANY */}
+      <g>
+        <polygon points="620,350 660,375 620,400 580,375" fill={relationFill} stroke={relationStroke} strokeWidth="2" />
+        <text x="620" y="380" textAnchor="middle" className="text-xs font-semibold" fill={textColor}>belongs</text>
+        {/* Connection lines */}
+        <line x1="470" y1="290" x2="580" y2="365" stroke={strokeColor} strokeWidth="1.5" />
+        <line x1="660" y1="385" x2="720" y2="450" stroke={strokeColor} strokeWidth="1.5" />
+        {/* Cardinality */}
+        <text x="510" y="320" className="text-xs font-bold" fill={textColor}>N</text>
+        <text x="690" y="420" className="text-xs font-bold" fill={textColor}>1</text>
+      </g>
+
+      {/* Legend */}
+      <g transform="translate(30, 80)">
+        <rect x="0" y="0" width="150" height="130" fill={attrFill} stroke={strokeColor} strokeWidth="1" rx="5" />
+        <text x="75" y="18" textAnchor="middle" className="text-xs font-bold" fill={textColor}>Legend</text>
+        <line x1="5" y1="25" x2="145" y2="25" stroke={strokeColor} strokeWidth="0.5" />
+        
+        {/* Entity */}
+        <rect x="10" y="35" width="30" height="15" fill={entityFill} stroke={entityStroke} strokeWidth="1.5" />
+        <text x="50" y="47" className="text-xs" fill={subTextColor}>Entity</text>
+        
+        {/* Attribute */}
+        <ellipse cx="25" cy="65" rx="15" ry="8" fill={attrFill} stroke={strokeColor} strokeWidth="1" />
+        <text x="50" y="68" className="text-xs" fill={subTextColor}>Attribute</text>
+        
+        {/* Key */}
+        <ellipse cx="25" cy="85" rx="15" ry="8" fill={keyAttrFill} stroke={strokeColor} strokeWidth="1" />
+        <text x="50" y="88" className="text-xs" fill={subTextColor}>Key (underlined)</text>
+        
+        {/* Multi-valued */}
+        <ellipse cx="25" cy="105" rx="15" ry="8" fill={attrFill} stroke={strokeColor} strokeWidth="1" />
+        <ellipse cx="25" cy="105" rx="12" ry="6" fill="none" stroke={strokeColor} strokeWidth="0.5" />
+        <text x="50" y="108" className="text-xs" fill={subTextColor}>Multi-valued</text>
+        
+        {/* Derived */}
+        <ellipse cx="25" cy="122" rx="15" ry="8" fill={attrFill} stroke={derivedStroke} strokeWidth="1" strokeDasharray="3,2" />
+        <text x="50" y="125" className="text-xs" fill={subTextColor}>Derived</text>
+      </g>
+    </svg>
+  );
+};
+
+// ============ ERD LEVEL 1 - Relational Schema (Current ERD) ============
+export const ERDLevel1: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
   const textColor = isDarkMode ? "#e5e7eb" : "#1f2937";
   const subTextColor = isDarkMode ? "#9ca3af" : "#4b5563";
   const strokeColor = isDarkMode ? "#6b7280" : "#374151";
@@ -138,6 +313,75 @@ export const ERDDiagram: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
       <line x1="665" y1="350" x2="655" y2="340" stroke="#374151" strokeWidth="2" />
       <line x1="665" y1="350" x2="675" y2="340" stroke="#374151" strokeWidth="2" />
     </svg>
+  );
+};
+
+// ============ ERD WRAPPER WITH LEVEL SELECTOR ============
+interface ERDProps extends DiagramProps {
+  level?: 0 | 1;
+  onLevelChange?: (level: 0 | 1) => void;
+  showLevelSelector?: boolean;
+}
+
+export const ERDDiagram: React.FC<ERDProps> = ({ 
+  isDarkMode = false, 
+  level = 1, 
+  onLevelChange,
+  showLevelSelector = true 
+}) => {
+  const [currentLevel, setCurrentLevel] = React.useState<0 | 1>(level);
+
+  React.useEffect(() => {
+    setCurrentLevel(level);
+  }, [level]);
+
+  const handleLevelChange = (newLevel: 0 | 1) => {
+    setCurrentLevel(newLevel);
+    onLevelChange?.(newLevel);
+  };
+
+  return (
+    <div className="w-full">
+      {showLevelSelector && (
+        <div className={`flex items-center justify-center gap-3 p-4 mb-4 rounded-xl ${
+          isDarkMode ? "bg-gray-800" : "bg-gray-100"
+        }`}>
+          <span className={`text-sm font-semibold ${
+            isDarkMode ? "text-gray-300" : "text-gray-600"
+          }`}>Select ERD Style:</span>
+          <div className="flex gap-2">
+            {([0, 1] as const).map((lvl) => (
+              <button
+                key={lvl}
+                onClick={() => handleLevelChange(lvl)}
+                className={`px-5 py-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                  currentLevel === lvl
+                    ? isDarkMode
+                      ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/30"
+                      : "bg-blue-600 text-white border-blue-600 shadow-lg"
+                    : isDarkMode
+                    ? "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                }`}
+              >
+                <span className="block font-bold">Level {lvl}</span>
+                <span className={`block text-xs mt-0.5 ${
+                  currentLevel === lvl 
+                    ? "text-blue-100" 
+                    : isDarkMode ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  {lvl === 0 ? "Chen (Conceptual)" : "Relational Schema"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="w-full">
+        {currentLevel === 0 && <ERDLevel0 isDarkMode={isDarkMode} />}
+        {currentLevel === 1 && <ERDLevel1 isDarkMode={isDarkMode} />}
+      </div>
+    </div>
   );
 };
 
@@ -832,12 +1076,53 @@ export const UseCaseDiagram: React.FC<DiagramProps> = ({ isDarkMode = false }) =
       <line x1="695" y1="330" x2="590" y2="340" stroke={strokeColor} strokeWidth="1" />
       <line x1="695" y1="350" x2="590" y2="410" stroke={strokeColor} strokeWidth="1" />
 
-      {/* Include relationships */}
-      <line x1="500" y1="230" x2="500" y2="310" stroke={strokeColor} strokeWidth="1" strokeDasharray="5,3" />
-      <text x="520" y="270" className="text-xs italic" fill={subTextColor}>«include»</text>
+      {/* Include relationships - Using curved paths to avoid overlap */}
+      {/* Enrich Lead includes Score Lead - curves right */}
+      <path 
+        d="M 530 225 Q 600 250 530 275" 
+        fill="none" 
+        stroke={strokeColor} 
+        strokeWidth="1.5" 
+        strokeDasharray="5,3" 
+        markerEnd="url(#arrowhead)"
+      />
+      <text x="610" y="255" className="text-xs italic" fill={subTextColor}>«include»</text>
 
-      <line x1="500" y1="300" x2="500" y2="380" stroke={strokeColor} strokeWidth="1" strokeDasharray="5,3" />
-      <text x="520" y="350" className="text-xs italic" fill={subTextColor}>«include»</text>
+      {/* Score Lead includes Call External APIs - curves left */}
+      <path 
+        d="M 470 295 Q 400 320 470 345" 
+        fill="none" 
+        stroke={strokeColor} 
+        strokeWidth="1.5" 
+        strokeDasharray="5,3" 
+        markerEnd="url(#arrowhead)"
+      />
+      <text x="360" y="325" className="text-xs italic" fill={subTextColor}>«include»</text>
+
+      {/* Call External APIs includes AI Analysis - curves right */}
+      <path 
+        d="M 530 365 Q 600 385 530 415" 
+        fill="none" 
+        stroke={strokeColor} 
+        strokeWidth="1.5" 
+        strokeDasharray="5,3" 
+        markerEnd="url(#arrowhead)"
+      />
+      <text x="610" y="395" className="text-xs italic" fill={subTextColor}>«include»</text>
+
+      {/* Arrow marker definition */}
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth="10"
+          markerHeight="7"
+          refX="9"
+          refY="3.5"
+          orient="auto"
+        >
+          <polygon points="0 0, 10 3.5, 0 7" fill={strokeColor} />
+        </marker>
+      </defs>
     </svg>
   );
 };
