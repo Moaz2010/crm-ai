@@ -19,7 +19,17 @@ import {
   Loader2,
   Bot,
   User,
+  Moon,
+  Sun,
 } from "lucide-react";
+import {
+  ERDDiagram,
+  SequenceDiagram,
+  DFDDiagram,
+  UseCaseDiagram,
+  ClassDiagram,
+  DiagramType,
+} from "@/components/diagrams/DiagramComponents";
 
 // AI Chat Message Interface
 interface ChatMessage {
@@ -27,8 +37,53 @@ interface ChatMessage {
   content: string;
 }
 
+// Simple markdown renderer for chat messages
+const renderMarkdown = (text: string) => {
+  // Split by code blocks first
+  const parts = text.split(/(```[\s\S]*?```|`[^`]+`)/);
+  
+  return parts.map((part, index) => {
+    // Code blocks
+    if (part.startsWith('```') && part.endsWith('```')) {
+      const code = part.slice(3, -3).replace(/^\w+\n/, '');
+      return (
+        <pre key={index} className="bg-gray-800 text-green-400 p-2 rounded text-xs my-2 overflow-x-auto">
+          <code>{code}</code>
+        </pre>
+      );
+    }
+    // Inline code
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={index} className="bg-gray-200 text-gray-800 px-1 rounded text-xs">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    // Process bold, italic, and line breaks
+    const processed = part
+      .split(/(\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_)/)
+      .map((segment, i) => {
+        if (segment.startsWith('**') && segment.endsWith('**')) {
+          return <strong key={i}>{segment.slice(2, -2)}</strong>;
+        }
+        if (segment.startsWith('__') && segment.endsWith('__')) {
+          return <strong key={i}>{segment.slice(2, -2)}</strong>;
+        }
+        if (segment.startsWith('*') && segment.endsWith('*') && segment.length > 2) {
+          return <em key={i}>{segment.slice(1, -1)}</em>;
+        }
+        if (segment.startsWith('_') && segment.endsWith('_') && segment.length > 2) {
+          return <em key={i}>{segment.slice(1, -1)}</em>;
+        }
+        return segment;
+      });
+    return <span key={index}>{processed}</span>;
+  });
+};
+
 // AI Chat Bubble Component
-const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diagramTitle: string }) => {
+const AIChatBubble = ({ diagramType, diagramTitle, isDarkMode }: { diagramType: string; diagramTitle: string; isDarkMode: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -151,7 +206,11 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+            className={`fixed bottom-24 right-6 z-50 w-96 h-[500px] rounded-2xl shadow-2xl border flex flex-col overflow-hidden ${
+              isDarkMode 
+                ? "bg-gray-900 border-gray-700" 
+                : "bg-white border-gray-200"
+            }`}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center gap-3">
@@ -171,14 +230,20 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${
+              isDarkMode ? "bg-gray-900" : "bg-gray-50"
+            }`}>
               {messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                    isDarkMode ? "bg-blue-900/50" : "bg-blue-100"
+                  }`}>
                     <Sparkles className="w-8 h-8 text-blue-600" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Hi! I'm your Diagram Assistant</h4>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <h4 className={`font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                    Hi! I'm your Diagram Assistant
+                  </h4>
+                  <p className={`text-sm mb-4 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
                     I can help you understand the {diagramTitle}. Try asking:
                   </p>
                   <div className="space-y-2">
@@ -190,7 +255,11 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
                             setInput(question);
                             inputRef.current?.focus();
                           }}
-                          className="block w-full text-left px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          className={`block w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? "text-blue-400 bg-blue-900/30 hover:bg-blue-900/50" 
+                              : "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                          }`}
                         >
                           {question}
                         </button>
@@ -205,7 +274,9 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
                     className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {msg.role === "assistant" && (
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isDarkMode ? "bg-blue-900/50" : "bg-blue-100"
+                      }`}>
                         <Bot className="w-4 h-4 text-blue-600" />
                       </div>
                     )}
@@ -213,10 +284,12 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
                       className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
                         msg.role === "user"
                           ? "bg-blue-600 text-white rounded-br-md"
+                          : isDarkMode
+                          ? "bg-gray-800 text-gray-200 rounded-bl-md"
                           : "bg-gray-100 text-gray-800 rounded-bl-md"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      <div className="whitespace-pre-wrap">{renderMarkdown(msg.content)}</div>
                     </div>
                     {msg.role === "user" && (
                       <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
@@ -228,13 +301,19 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
               )}
               {isLoading && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDarkMode ? "bg-blue-900/50" : "bg-blue-100"
+                  }`}>
                     <Bot className="w-4 h-4 text-blue-600" />
                   </div>
-                  <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className={`rounded-2xl rounded-bl-md px-4 py-3 ${
+                    isDarkMode ? "bg-gray-800" : "bg-gray-100"
+                  }`}>
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                      <span className="text-sm text-gray-500">Thinking...</span>
+                      <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        Thinking...
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -243,7 +322,11 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className={`p-4 border-t ${
+              isDarkMode 
+                ? "border-gray-700 bg-gray-800" 
+                : "border-gray-200 bg-gray-50"
+            }`}>
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
@@ -252,7 +335,11 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about this diagram..."
-                  className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`flex-1 px-4 py-2 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode 
+                      ? "bg-gray-900 border-gray-600 text-white placeholder-gray-500" 
+                      : "border-gray-300 text-gray-900 placeholder-gray-400"
+                  }`}
                   disabled={isLoading}
                 />
                 <button
@@ -263,7 +350,9 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
                   <Send className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-xs text-gray-400 text-center mt-2">Powered by GPT-4o-mini</p>
+              <p className={`text-xs text-center mt-2 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                Powered by GPT-4o-mini
+              </p>
             </div>
           </motion.div>
         )}
@@ -272,8 +361,6 @@ const AIChatBubble = ({ diagramType, diagramTitle }: { diagramType: string; diag
   );
 };
 
-type DiagramType = "erd" | "usecase" | "sequence" | "dfd" | "class";
-
 interface DiagramInfo {
   id: DiagramType;
   title: string;
@@ -281,6 +368,7 @@ interface DiagramInfo {
   icon: React.ReactNode;
   color: string;
   bgColor: string;
+  darkBgColor: string;
 }
 
 const diagrams: DiagramInfo[] = [
@@ -291,6 +379,7 @@ const diagrams: DiagramInfo[] = [
     icon: <Database className="w-5 h-5" />,
     color: "text-blue-600",
     bgColor: "bg-blue-50 hover:bg-blue-100",
+    darkBgColor: "bg-blue-900/30 hover:bg-blue-900/50",
   },
   {
     id: "usecase",
@@ -299,6 +388,7 @@ const diagrams: DiagramInfo[] = [
     icon: <Users className="w-5 h-5" />,
     color: "text-green-600",
     bgColor: "bg-green-50 hover:bg-green-100",
+    darkBgColor: "bg-green-900/30 hover:bg-green-900/50",
   },
   {
     id: "sequence",
@@ -307,6 +397,7 @@ const diagrams: DiagramInfo[] = [
     icon: <GitBranch className="w-5 h-5" />,
     color: "text-purple-600",
     bgColor: "bg-purple-50 hover:bg-purple-100",
+    darkBgColor: "bg-purple-900/30 hover:bg-purple-900/50",
   },
   {
     id: "dfd",
@@ -315,6 +406,7 @@ const diagrams: DiagramInfo[] = [
     icon: <Workflow className="w-5 h-5" />,
     color: "text-orange-600",
     bgColor: "bg-orange-50 hover:bg-orange-100",
+    darkBgColor: "bg-orange-900/30 hover:bg-orange-900/50",
   },
   {
     id: "class",
@@ -323,706 +415,27 @@ const diagrams: DiagramInfo[] = [
     icon: <BoxesIcon className="w-5 h-5" />,
     color: "text-pink-600",
     bgColor: "bg-pink-50 hover:bg-pink-100",
+    darkBgColor: "bg-pink-900/30 hover:bg-pink-900/50",
   },
 ];
 
-// ============ SVG DIAGRAM COMPONENTS ============
-
-// Sequence Diagram Component
-const SequenceDiagram = () => {
-  const participants = [
-    { name: "User", x: 80 },
-    { name: "Frontend", x: 230 },
-    { name: "API Server", x: 380 },
-    { name: "LeadService", x: 530 },
-    { name: "Database", x: 680 },
-  ];
-
-  const messages: Array<{
-    from: number;
-    to: number;
-    label: string;
-    y: number;
-    dashed?: boolean;
-    activate?: number;
-    deactivate?: number;
-    self?: boolean;
-  }> = [
-    { from: 0, to: 1, label: "1: Enter Lead URL", y: 100, activate: 1 },
-    { from: 1, to: 2, label: "2: POST /api/leads/parse", y: 130, activate: 2 },
-    { from: 2, to: 3, label: "3: parseLead(url)", y: 160, activate: 3 },
-    { from: 3, to: 4, label: "4: Check duplicate", y: 190, activate: 4 },
-    { from: 4, to: 3, label: "5: No duplicate", y: 220, dashed: true, deactivate: 4 },
-    { from: 3, to: 2, label: "6: Parsed data", y: 250, dashed: true, deactivate: 3 },
-    { from: 2, to: 4, label: "7: INSERT lead", y: 280, activate: 4 },
-    { from: 4, to: 2, label: "8: Lead created", y: 310, dashed: true, deactivate: 4 },
-    { from: 2, to: 1, label: "9: Success response", y: 340, dashed: true, deactivate: 2 },
-    { from: 1, to: 0, label: "10: Show new lead", y: 370, dashed: true, deactivate: 1 },
-    // Enrichment flow
-    { from: 0, to: 1, label: "11: Click Enrich", y: 420, activate: 1 },
-    { from: 1, to: 2, label: "12: POST /api/leads/enrich", y: 450, activate: 2 },
-    { from: 2, to: 3, label: "13: enrichLead(id)", y: 480, activate: 3 },
-    { from: 3, to: 4, label: "14: Get lead data", y: 510, activate: 4 },
-    { from: 4, to: 3, label: "15: Lead data", y: 540, dashed: true, deactivate: 4 },
-    { from: 3, to: 3, label: "16: Call External APIs", y: 570, self: true },
-    { from: 3, to: 4, label: "17: UPDATE lead", y: 610, activate: 4 },
-    { from: 4, to: 3, label: "18: Updated", y: 640, dashed: true, deactivate: 4 },
-    { from: 3, to: 2, label: "19: Enriched lead", y: 670, dashed: true, deactivate: 3 },
-    { from: 2, to: 1, label: "20: Success response", y: 700, dashed: true, deactivate: 2 },
-    { from: 1, to: 0, label: "21: Show enriched data", y: 730, dashed: true, deactivate: 1 },
-  ];
-
-  // Calculate activation boxes
-  const activations: { participant: number; startY: number; endY: number }[] = [];
-  const activeStarts: { [key: number]: number } = {};
-
-  messages.forEach((msg) => {
-    if (msg.activate !== undefined) {
-      activeStarts[msg.activate] = msg.y - 10;
-    }
-    if (msg.deactivate !== undefined && activeStarts[msg.deactivate] !== undefined) {
-      activations.push({
-        participant: msg.deactivate,
-        startY: activeStarts[msg.deactivate],
-        endY: msg.y + 10,
-      });
-      delete activeStarts[msg.deactivate];
-    }
-  });
-
-  return (
-    <svg viewBox="0 0 780 780" className="w-full h-full">
-      <defs>
-        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
-        </marker>
-        <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
-        </marker>
-      </defs>
-
-      {/* Title */}
-      <text x="390" y="25" textAnchor="middle" className="text-lg font-bold" fill="#1f2937">
-        Sequence Diagram - LeadCatch System
-      </text>
-
-      {/* Participant boxes */}
-      {participants.map((p, i) => (
-        <g key={i}>
-          <rect x={p.x - 50} y={40} width={100} height={35} fill="white" stroke="#374151" strokeWidth="2" />
-          <text x={p.x} y={62} textAnchor="middle" className="text-sm font-semibold" fill="#1f2937">
-            {p.name}
-          </text>
-          {/* Lifeline */}
-          <line x1={p.x} y1={75} x2={p.x} y2={760} stroke="#374151" strokeWidth="1" strokeDasharray="5,5" />
-        </g>
-      ))}
-
-      {/* Activation boxes */}
-      {activations.map((act, i) => (
-        <rect
-          key={i}
-          x={participants[act.participant].x - 8}
-          y={act.startY}
-          width={16}
-          height={act.endY - act.startY}
-          fill="white"
-          stroke="#374151"
-          strokeWidth="1.5"
-        />
-      ))}
-
-      {/* Messages */}
-      {messages.map((msg, i) => {
-        const fromX = participants[msg.from].x;
-        const toX = participants[msg.to].x;
-        const isLeftToRight = toX > fromX;
-
-        if (msg.self) {
-          // Self-call arrow
-          return (
-            <g key={i}>
-              <path
-                d={`M ${fromX + 8} ${msg.y} H ${fromX + 40} V ${msg.y + 25} H ${fromX + 8}`}
-                fill="none"
-                stroke="#374151"
-                strokeWidth="1.5"
-                markerEnd="url(#arrowhead)"
-              />
-              <text x={fromX + 45} y={msg.y + 10} className="text-xs" fill="#374151">
-                {msg.label}
-              </text>
-            </g>
-          );
-        }
-
-        return (
-          <g key={i}>
-            <line
-              x1={isLeftToRight ? fromX + 8 : fromX - 8}
-              y1={msg.y}
-              x2={isLeftToRight ? toX - 8 : toX + 8}
-              y2={msg.y}
-              stroke={msg.dashed ? "#6b7280" : "#374151"}
-              strokeWidth="1.5"
-              strokeDasharray={msg.dashed ? "5,3" : "none"}
-              markerEnd={msg.dashed ? "url(#arrowhead-dashed)" : "url(#arrowhead)"}
-            />
-            <text
-              x={(fromX + toX) / 2}
-              y={msg.y - 5}
-              textAnchor="middle"
-              className="text-xs"
-              fill="#374151"
-            >
-              {msg.label}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-};
-
-// DFD Diagram Component
-const DFDDiagram = () => {
-  const centerX = 400;
-  const centerY = 300;
-  const radius = 70;
-
-  const entities = [
-    { name: "User", x: 100, y: 150 },
-    { name: "Admin", x: 100, y: 450 },
-    { name: "Apollo.io", x: 700, y: 100 },
-    { name: "Clearbit", x: 700, y: 250 },
-    { name: "Hunter.io", x: 700, y: 400 },
-    { name: "OpenAI", x: 700, y: 550 },
-  ];
-
-  const flows = [
-    { from: "User", to: "center", label: "Lead URL", fromPos: { x: 160, y: 150 }, toPos: { x: centerX - radius, y: centerY - 40 } },
-    { from: "User", to: "center", label: "Manual Entry", fromPos: { x: 160, y: 170 }, toPos: { x: centerX - radius, y: centerY } },
-    { from: "center", to: "User", label: "Lead List", fromPos: { x: centerX - radius, y: centerY + 40 }, toPos: { x: 160, y: 190 } },
-    { from: "Admin", to: "center", label: "Configuration", fromPos: { x: 160, y: 450 }, toPos: { x: centerX - radius, y: centerY + 60 } },
-    { from: "center", to: "Admin", label: "Reports", fromPos: { x: centerX - radius, y: centerY + 80 }, toPos: { x: 160, y: 470 } },
-    { from: "center", to: "Apollo", label: "Enrich Request", fromPos: { x: centerX + radius, y: centerY - 60 }, toPos: { x: 640, y: 100 } },
-    { from: "Apollo", to: "center", label: "Contact Data", fromPos: { x: 640, y: 120 }, toPos: { x: centerX + radius, y: centerY - 40 } },
-    { from: "center", to: "Clearbit", label: "Company Query", fromPos: { x: centerX + radius, y: centerY - 20 }, toPos: { x: 640, y: 250 } },
-    { from: "Clearbit", to: "center", label: "Company Info", fromPos: { x: 640, y: 270 }, toPos: { x: centerX + radius, y: centerY } },
-    { from: "center", to: "Hunter", label: "Email Query", fromPos: { x: centerX + radius, y: centerY + 20 }, toPos: { x: 640, y: 400 } },
-    { from: "Hunter", to: "center", label: "Email Data", fromPos: { x: 640, y: 420 }, toPos: { x: centerX + radius, y: centerY + 40 } },
-    { from: "center", to: "OpenAI", label: "Score Request", fromPos: { x: centerX + radius, y: centerY + 60 }, toPos: { x: 640, y: 550 } },
-    { from: "OpenAI", to: "center", label: "AI Score", fromPos: { x: 640, y: 570 }, toPos: { x: centerX + radius, y: centerY + 80 } },
-  ];
-
-  return (
-    <svg viewBox="0 0 800 650" className="w-full h-full">
-      <defs>
-        <marker id="dfd-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
-        </marker>
-      </defs>
-
-      {/* Title */}
-      <text x="400" y="30" textAnchor="middle" className="text-lg font-bold" fill="#1f2937">
-        Data Flow Diagram (Level 0) - LeadCatch System
-      </text>
-
-      {/* Central Process Circle */}
-      <circle cx={centerX} cy={centerY} r={radius} fill="white" stroke="#374151" strokeWidth="2" />
-      <text x={centerX} y={centerY - 15} textAnchor="middle" className="text-sm font-bold" fill="#1f2937">
-        0
-      </text>
-      <text x={centerX} y={centerY + 5} textAnchor="middle" className="text-sm font-semibold" fill="#1f2937">
-        LeadCatch
-      </text>
-      <text x={centerX} y={centerY + 22} textAnchor="middle" className="text-sm font-semibold" fill="#1f2937">
-        System
-      </text>
-
-      {/* External Entities */}
-      {entities.map((entity, i) => (
-        <g key={i}>
-          <rect
-            x={entity.x - 50}
-            y={entity.y - 20}
-            width={100}
-            height={40}
-            fill="white"
-            stroke="#374151"
-            strokeWidth="2"
-          />
-          <text x={entity.x} y={entity.y + 5} textAnchor="middle" className="text-sm font-semibold" fill="#1f2937">
-            {entity.name}
-          </text>
-        </g>
-      ))}
-
-      {/* Data Flows */}
-      {flows.map((flow, i) => (
-        <g key={i}>
-          <line
-            x1={flow.fromPos.x}
-            y1={flow.fromPos.y}
-            x2={flow.toPos.x}
-            y2={flow.toPos.y}
-            stroke="#374151"
-            strokeWidth="1.5"
-            markerEnd="url(#dfd-arrow)"
-          />
-          <text
-            x={(flow.fromPos.x + flow.toPos.x) / 2}
-            y={(flow.fromPos.y + flow.toPos.y) / 2 - 5}
-            textAnchor="middle"
-            className="text-xs"
-            fill="#4b5563"
-          >
-            {flow.label}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-};
-
-// ERD Diagram Component
-const ERDDiagram = () => {
-  const entities = [
-    {
-      name: "USER",
-      x: 100,
-      y: 50,
-      attributes: ["id: uuid PK", "email: string", "full_name: string", "created_at: timestamp"],
-    },
-    {
-      name: "LEAD",
-      x: 350,
-      y: 50,
-      attributes: [
-        "id: uuid PK",
-        "user_id: uuid FK",
-        "company_id: uuid FK",
-        "first_name: string",
-        "last_name: string",
-        "email: string",
-        "lead_score: int",
-        "status: enum",
-      ],
-    },
-    {
-      name: "COMPANY",
-      x: 600,
-      y: 50,
-      attributes: ["id: uuid PK", "name: string", "domain: string", "industry: string", "size: string"],
-    },
-    {
-      name: "CONTACT",
-      x: 100,
-      y: 320,
-      attributes: ["id: uuid PK", "lead_id: uuid FK", "type: enum", "value: string", "is_primary: bool"],
-    },
-    {
-      name: "ACTIVITY",
-      x: 350,
-      y: 320,
-      attributes: ["id: uuid PK", "lead_id: uuid FK", "type: enum", "description: text", "created_at: timestamp"],
-    },
-    {
-      name: "TAG",
-      x: 600,
-      y: 320,
-      attributes: ["id: uuid PK", "name: string", "color: string"],
-    },
-  ];
-
-  const relationships = [
-    { from: { x: 200, y: 120 }, to: { x: 270, y: 120 }, label: "creates", fromCard: "1", toCard: "N" },
-    { from: { x: 480, y: 120 }, to: { x: 520, y: 120 }, label: "belongs_to", fromCard: "N", toCard: "1" },
-    { from: { x: 350, y: 220 }, to: { x: 350, y: 290 }, label: "has", fromCard: "1", toCard: "N" },
-    { from: { x: 200, y: 350 }, to: { x: 270, y: 200 }, label: "has", fromCard: "N", toCard: "1" },
-    { from: { x: 480, y: 200 }, to: { x: 520, y: 350 }, label: "tagged", fromCard: "N", toCard: "N" },
-  ];
-
-  return (
-    <svg viewBox="0 0 750 520" className="w-full h-full">
-      {/* Title */}
-      <text x="375" y="25" textAnchor="middle" className="text-lg font-bold" fill="#1f2937">
-        Entity Relationship Diagram - LeadCatch System
-      </text>
-
-      {/* Entities */}
-      {entities.map((entity, i) => {
-        const height = 30 + entity.attributes.length * 18;
-        return (
-          <g key={i}>
-            {/* Entity header */}
-            <rect x={entity.x - 80} y={entity.y} width={160} height={28} fill="#3b82f6" stroke="#1e40af" strokeWidth="2" />
-            <text x={entity.x} y={entity.y + 19} textAnchor="middle" className="text-sm font-bold" fill="white">
-              {entity.name}
-            </text>
-            {/* Entity body */}
-            <rect
-              x={entity.x - 80}
-              y={entity.y + 28}
-              width={160}
-              height={height - 28}
-              fill="white"
-              stroke="#1e40af"
-              strokeWidth="2"
-            />
-            {/* Attributes */}
-            {entity.attributes.map((attr, j) => (
-              <text
-                key={j}
-                x={entity.x - 70}
-                y={entity.y + 48 + j * 18}
-                className="text-xs"
-                fill="#374151"
-              >
-                {attr}
-              </text>
-            ))}
-          </g>
-        );
-      })}
-
-      {/* Relationships */}
-      {relationships.map((rel, i) => (
-        <g key={i}>
-          <line x1={rel.from.x} y1={rel.from.y} x2={rel.to.x} y2={rel.to.y} stroke="#374151" strokeWidth="1.5" />
-          <text
-            x={(rel.from.x + rel.to.x) / 2}
-            y={(rel.from.y + rel.to.y) / 2 - 5}
-            textAnchor="middle"
-            className="text-xs italic"
-            fill="#4b5563"
-          >
-            {rel.label}
-          </text>
-          <text x={rel.from.x + 5} y={rel.from.y - 5} className="text-xs font-semibold" fill="#1f2937">
-            {rel.fromCard}
-          </text>
-          <text x={rel.to.x - 10} y={rel.to.y - 5} className="text-xs font-semibold" fill="#1f2937">
-            {rel.toCard}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-};
-
-// Use Case Diagram Component
-const UseCaseDiagram = () => {
-  const actors = [
-    { name: "User", x: 80, y: 200 },
-    { name: "Admin", x: 80, y: 400 },
-    { name: "System", x: 700, y: 300 },
-  ];
-
-  const useCases = [
-    { name: "Parse Lead from URL", x: 300, y: 100 },
-    { name: "Manual Lead Entry", x: 300, y: 180 },
-    { name: "View Lead List", x: 300, y: 260 },
-    { name: "Enrich Lead", x: 500, y: 180 },
-    { name: "Score Lead", x: 500, y: 260 },
-    { name: "Export Leads", x: 300, y: 340 },
-    { name: "Manage Settings", x: 300, y: 420 },
-    { name: "Generate Reports", x: 300, y: 500 },
-    { name: "Call External APIs", x: 500, y: 340 },
-    { name: "AI Analysis", x: 500, y: 420 },
-  ];
-
-  const connections = [
-    { actor: 0, useCase: 0 },
-    { actor: 0, useCase: 1 },
-    { actor: 0, useCase: 2 },
-    { actor: 0, useCase: 3 },
-    { actor: 0, useCase: 5 },
-    { actor: 1, useCase: 6 },
-    { actor: 1, useCase: 7 },
-    { actor: 2, useCase: 8 },
-    { actor: 2, useCase: 9 },
-  ];
-
-  const includes = [
-    { from: 3, to: 8, label: "<<include>>" },
-    { from: 4, to: 9, label: "<<include>>" },
-  ];
-
-  return (
-    <svg viewBox="0 0 800 600" className="w-full h-full">
-      {/* Title */}
-      <text x="400" y="30" textAnchor="middle" className="text-lg font-bold" fill="#1f2937">
-        Use Case Diagram - LeadCatch System
-      </text>
-
-      {/* System boundary */}
-      <rect x="200" y="60" width="400" height="500" fill="none" stroke="#374151" strokeWidth="2" strokeDasharray="10,5" rx="10" />
-      <text x="400" y="80" textAnchor="middle" className="text-sm font-semibold" fill="#4b5563">
-        LeadCatch System
-      </text>
-
-      {/* Actors (stick figures) */}
-      {actors.map((actor, i) => (
-        <g key={i}>
-          {/* Head */}
-          <circle cx={actor.x} cy={actor.y - 25} r={12} fill="white" stroke="#374151" strokeWidth="2" />
-          {/* Body */}
-          <line x1={actor.x} y1={actor.y - 13} x2={actor.x} y2={actor.y + 15} stroke="#374151" strokeWidth="2" />
-          {/* Arms */}
-          <line x1={actor.x - 15} y1={actor.y} x2={actor.x + 15} y2={actor.y} stroke="#374151" strokeWidth="2" />
-          {/* Legs */}
-          <line x1={actor.x} y1={actor.y + 15} x2={actor.x - 12} y2={actor.y + 35} stroke="#374151" strokeWidth="2" />
-          <line x1={actor.x} y1={actor.y + 15} x2={actor.x + 12} y2={actor.y + 35} stroke="#374151" strokeWidth="2" />
-          {/* Name */}
-          <text x={actor.x} y={actor.y + 55} textAnchor="middle" className="text-sm font-semibold" fill="#1f2937">
-            {actor.name}
-          </text>
-        </g>
-      ))}
-
-      {/* Use Cases (ovals) */}
-      {useCases.map((uc, i) => (
-        <g key={i}>
-          <ellipse cx={uc.x} cy={uc.y} rx={80} ry={25} fill="white" stroke="#374151" strokeWidth="2" />
-          <text x={uc.x} y={uc.y + 5} textAnchor="middle" className="text-xs" fill="#1f2937">
-            {uc.name}
-          </text>
-        </g>
-      ))}
-
-      {/* Actor to Use Case connections */}
-      {connections.map((conn, i) => {
-        const actor = actors[conn.actor];
-        const uc = useCases[conn.useCase];
-        return (
-          <line
-            key={i}
-            x1={actor.x + 20}
-            y1={actor.y}
-            x2={uc.x - 80}
-            y2={uc.y}
-            stroke="#374151"
-            strokeWidth="1"
-          />
-        );
-      })}
-
-      {/* Include relationships */}
-      {includes.map((inc, i) => {
-        const from = useCases[inc.from];
-        const to = useCases[inc.to];
-        return (
-          <g key={i}>
-            <line
-              x1={from.x + 80}
-              y1={from.y}
-              x2={to.x - 80}
-              y2={to.y}
-              stroke="#374151"
-              strokeWidth="1"
-              strokeDasharray="5,3"
-            />
-            <text
-              x={(from.x + to.x) / 2 + 40}
-              y={(from.y + to.y) / 2 - 5}
-              textAnchor="middle"
-              className="text-xs italic"
-              fill="#4b5563"
-            >
-              {inc.label}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-};
-
-// Class Diagram Component
-const ClassDiagram = () => {
-  const classes = [
-    {
-      name: "LeadService",
-      x: 200,
-      y: 50,
-      stereotype: "",
-      attributes: ["- leads: Lead[]", "- enrichmentProvider: EnrichmentProvider"],
-      methods: ["+parseLead(url): Lead", "+enrichLead(id): Lead", "+scoreLead(id): number", "+getLeads(): Lead[]"],
-    },
-    {
-      name: "Lead",
-      x: 500,
-      y: 50,
-      stereotype: "",
-      attributes: [
-        "- id: string",
-        "- firstName: string",
-        "- lastName: string",
-        "- email: string",
-        "- score: number",
-        "- status: LeadStatus",
-      ],
-      methods: ["+getFullName(): string", "+updateScore(score): void", "+enrich(data): void"],
-    },
-    {
-      name: "EnrichmentProvider",
-      x: 200,
-      y: 320,
-      stereotype: "<<interface>>",
-      attributes: [],
-      methods: ["+enrich(lead): EnrichmentData", "+getProviderName(): string"],
-    },
-    {
-      name: "ApolloProvider",
-      x: 80,
-      y: 480,
-      stereotype: "",
-      attributes: ["- apiKey: string"],
-      methods: ["+enrich(lead): EnrichmentData", "+getProviderName(): string"],
-    },
-    {
-      name: "ClearbitProvider",
-      x: 320,
-      y: 480,
-      stereotype: "",
-      attributes: ["- apiKey: string"],
-      methods: ["+enrich(lead): EnrichmentData", "+getProviderName(): string"],
-    },
-    {
-      name: "LeadStatus",
-      x: 500,
-      y: 320,
-      stereotype: "<<enumeration>>",
-      attributes: ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"],
-      methods: [],
-    },
-  ];
-
-  return (
-    <svg viewBox="0 0 700 620" className="w-full h-full">
-      {/* Title */}
-      <text x="350" y="25" textAnchor="middle" className="text-lg font-bold" fill="#1f2937">
-        Class Diagram - LeadCatch System
-      </text>
-
-      {/* Classes */}
-      {classes.map((cls, i) => {
-        const hasStereotype = cls.stereotype !== "";
-        const headerHeight = hasStereotype ? 45 : 28;
-        const attrHeight = Math.max(cls.attributes.length * 16 + 8, 25);
-        const methodHeight = cls.methods.length > 0 ? Math.max(cls.methods.length * 16 + 8, 25) : 0;
-
-        return (
-          <g key={i}>
-            {/* Class header */}
-            <rect
-              x={cls.x - 90}
-              y={cls.y}
-              width={180}
-              height={headerHeight}
-              fill={hasStereotype ? (cls.stereotype.includes("interface") ? "#fef3c7" : "#dbeafe") : "#e0e7ff"}
-              stroke="#374151"
-              strokeWidth="2"
-            />
-            {hasStereotype ? (
-              <>
-                <text x={cls.x} y={cls.y + 17} textAnchor="middle" className="text-xs italic" fill="#4b5563">
-                  {cls.stereotype}
-                </text>
-                <text x={cls.x} y={cls.y + 35} textAnchor="middle" className="text-sm font-bold" fill="#1f2937">
-                  {cls.name}
-                </text>
-              </>
-            ) : (
-              <text x={cls.x} y={cls.y + 19} textAnchor="middle" className="text-sm font-bold" fill="#1f2937">
-                {cls.name}
-              </text>
-            )}
-
-            {/* Attributes section */}
-            <rect
-              x={cls.x - 90}
-              y={cls.y + headerHeight}
-              width={180}
-              height={attrHeight}
-              fill="white"
-              stroke="#374151"
-              strokeWidth="2"
-            />
-            {cls.attributes.map((attr, j) => (
-              <text
-                key={j}
-                x={cls.x - 82}
-                y={cls.y + headerHeight + 17 + j * 16}
-                className="text-xs"
-                fill="#374151"
-              >
-                {attr}
-              </text>
-            ))}
-
-            {/* Methods section */}
-            {cls.methods.length > 0 && (
-              <>
-                <rect
-                  x={cls.x - 90}
-                  y={cls.y + headerHeight + attrHeight}
-                  width={180}
-                  height={methodHeight}
-                  fill="white"
-                  stroke="#374151"
-                  strokeWidth="2"
-                />
-                {cls.methods.map((method, j) => (
-                  <text
-                    key={j}
-                    x={cls.x - 82}
-                    y={cls.y + headerHeight + attrHeight + 17 + j * 16}
-                    className="text-xs"
-                    fill="#374151"
-                  >
-                    {method}
-                  </text>
-                ))}
-              </>
-            )}
-          </g>
-        );
-      })}
-
-      {/* Relationships */}
-      {/* LeadService uses Lead */}
-      <line x1={290} y1={100} x2={410} y2={100} stroke="#374151" strokeWidth="1.5" />
-      <text x={350} y={90} textAnchor="middle" className="text-xs" fill="#4b5563">
-        uses
-      </text>
-
-      {/* LeadService uses EnrichmentProvider */}
-      <line x1={200} y1={200} x2={200} y2={290} stroke="#374151" strokeWidth="1.5" />
-      <text x={215} y={250} className="text-xs" fill="#4b5563">
-        uses
-      </text>
-
-      {/* Lead uses LeadStatus */}
-      <line x1={500} y1={230} x2={500} y2={290} stroke="#374151" strokeWidth="1.5" />
-
-      {/* Inheritance arrows (providers implement interface) */}
-      <line x1={80} y1={450} x2={170} y2={400} stroke="#374151" strokeWidth="1.5" strokeDasharray="5,3" />
-      <line x1={320} y1={450} x2={230} y2={400} stroke="#374151" strokeWidth="1.5" strokeDasharray="5,3" />
-      <polygon points="170,400 160,410 180,410" fill="white" stroke="#374151" strokeWidth="1.5" />
-      <polygon points="230,400 220,410 240,410" fill="white" stroke="#374151" strokeWidth="1.5" />
-    </svg>
-  );
-};
-
-// ============ DIAGRAM MAPPING ============
-const DiagramComponents: Record<DiagramType, React.FC> = {
-  erd: ERDDiagram,
-  usecase: UseCaseDiagram,
-  sequence: SequenceDiagram,
-  dfd: DFDDiagram,
-  class: ClassDiagram,
+// Get diagram component with dark mode support
+const getDiagramComponent = (type: DiagramType, isDarkMode: boolean) => {
+  const props = { isDarkMode };
+  switch (type) {
+    case "erd":
+      return <ERDDiagram {...props} />;
+    case "sequence":
+      return <SequenceDiagram {...props} />;
+    case "dfd":
+      return <DFDDiagram {...props} showLevelSelector={true} />;
+    case "usecase":
+      return <UseCaseDiagram {...props} />;
+    case "class":
+      return <ClassDiagram {...props} />;
+    default:
+      return <ERDDiagram {...props} />;
+  }
 };
 
 const diagramDescriptions: Record<DiagramType, { title: string; points: string[] }> = {
@@ -1031,8 +444,8 @@ const diagramDescriptions: Record<DiagramType, { title: string; points: string[]
     points: [
       "Shows database entities: User, Lead, Company, Contact, Activity, Tag",
       "Primary keys (PK) and Foreign keys (FK) clearly marked",
-      "Cardinality: 1 (one), N (many) relationships",
-      "Attributes with data types for each entity",
+      "Cardinality: 1 (one), N (many) relationships with crow's foot notation",
+      "Color-coded entities for visual distinction",
     ],
   },
   usecase: {
@@ -1055,13 +468,12 @@ const diagramDescriptions: Record<DiagramType, { title: string; points: string[]
     ],
   },
   dfd: {
-    title: "Data Flow Diagram (Level 0)",
+    title: "Data Flow Diagram (Level 1)",
     points: [
-      "Central process circle: LeadCatch System (labeled 0)",
-      "External entities as rectangles around the process",
+      "Processes shown as rounded rectangles with ID numbers (1.0-5.0)",
+      "External entities as plain rectangles (User, Admin, External APIs)",
+      "Data stores shown as open-ended rectangles (D1, D2)",
       "Labeled arrows show data flow direction",
-      "Inputs: Lead URL, Manual Entry, Configuration",
-      "Outputs: Lead List, Reports, API calls",
     ],
   },
   class: {
@@ -1070,7 +482,7 @@ const diagramDescriptions: Record<DiagramType, { title: string; points: string[]
       "Classes with attributes (-) and methods (+)",
       "<<interface>> EnrichmentProvider with implementations",
       "<<enumeration>> LeadStatus with possible values",
-      "Inheritance shown with dashed lines and hollow arrows",
+      "Inheritance shown with hollow arrow heads",
       "Associations: uses relationships between classes",
     ],
   },
@@ -1079,9 +491,9 @@ const diagramDescriptions: Record<DiagramType, { title: string; points: string[]
 export default function DiagramsPage() {
   const [selectedDiagram, setSelectedDiagram] = useState<DiagramType>("erd");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const currentDescription = diagramDescriptions[selectedDiagram];
-  const DiagramComponent = DiagramComponents[selectedDiagram];
 
   const handleDownload = () => {
     const svgElement = document.querySelector("#diagram-container svg");
@@ -1098,19 +510,48 @@ export default function DiagramsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
+    <div className={`min-h-screen p-8 transition-colors duration-300 ${
+      isDarkMode 
+        ? "bg-gray-950" 
+        : "bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
+    }`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">LeadCatch Architecture Diagrams</h1>
-          <p className="text-gray-500 mt-2">System documentation with UML diagrams</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className={`text-3xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+              LeadCatch Architecture Diagrams
+            </h1>
+            <p className={`mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+              System documentation with UML diagrams
+            </p>
+          </div>
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`p-3 rounded-lg transition-colors ${
+              isDarkMode 
+                ? "bg-gray-800 hover:bg-gray-700 text-yellow-400" 
+                : "bg-white hover:bg-gray-100 text-gray-600 shadow-sm border border-gray-200"
+            }`}
+            title={isDarkMode ? "Light Mode" : "Dark Mode"}
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </div>
 
         <div className="flex gap-8">
           {/* Sidebar */}
           <div className="w-72 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-8">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            <div className={`rounded-xl shadow-sm border p-4 sticky top-8 ${
+              isDarkMode 
+                ? "bg-gray-900 border-gray-800" 
+                : "bg-white border-gray-200"
+            }`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${
+                isDarkMode ? "text-gray-400" : "text-gray-500"
+              }`}>
                 Diagrams
               </h2>
               <nav className="space-y-2">
@@ -1120,11 +561,15 @@ export default function DiagramsPage() {
                     onClick={() => setSelectedDiagram(diagram.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                       selectedDiagram === diagram.id
-                        ? `${diagram.bgColor} ${diagram.color} ring-2 ring-offset-2`
+                        ? isDarkMode
+                          ? `${diagram.darkBgColor} ${diagram.color} ring-2 ring-offset-2 ring-offset-gray-900`
+                          : `${diagram.bgColor} ${diagram.color} ring-2 ring-offset-2`
+                        : isDarkMode
+                        ? "hover:bg-gray-800 text-gray-300"
                         : "hover:bg-gray-50 text-gray-700"
                     }`}
                   >
-                    <span className={selectedDiagram === diagram.id ? diagram.color : "text-gray-400"}>
+                    <span className={selectedDiagram === diagram.id ? diagram.color : isDarkMode ? "text-gray-500" : "text-gray-400"}>
                       {diagram.icon}
                     </span>
                     <div className="text-left">
@@ -1138,14 +583,18 @@ export default function DiagramsPage() {
               </nav>
 
               {/* Description Panel */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className={`mt-6 pt-6 border-t ${isDarkMode ? "border-gray-800" : "border-gray-200"}`}>
                 <div className="flex items-center gap-2 mb-3">
                   <Info className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">{currentDescription.title}</h3>
+                  <h3 className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                    {currentDescription.title}
+                  </h3>
                 </div>
                 <ul className="space-y-2">
                   {currentDescription.points.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                    <li key={i} className={`flex items-start gap-2 text-xs ${
+                      isDarkMode ? "text-gray-400" : "text-gray-600"
+                    }`}>
                       <span className="text-blue-500 mt-1">•</span>
                       {point}
                     </li>
@@ -1154,10 +603,14 @@ export default function DiagramsPage() {
               </div>
 
               {/* Actions */}
-              <div className="mt-6 pt-6 border-t border-gray-200 space-y-2">
+              <div className={`mt-6 pt-6 border-t space-y-2 ${isDarkMode ? "border-gray-800" : "border-gray-200"}`}>
                 <button
                   onClick={handleDownload}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className={`w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? "text-gray-300 bg-gray-800 border border-gray-700 hover:bg-gray-700" 
+                      : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                  }`}
                 >
                   <Download className="w-4 h-4" />
                   Download SVG
@@ -1180,21 +633,29 @@ export default function DiagramsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+              className={`rounded-xl shadow-sm border overflow-hidden ${
+                isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+              }`}
             >
-              <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-lg font-semibold text-gray-900">
+              <div className={`p-4 border-b ${
+                isDarkMode ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"
+              }`}>
+                <h2 className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                   {diagrams.find((d) => d.id === selectedDiagram)?.title}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className={`text-sm mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
                   {diagrams.find((d) => d.id === selectedDiagram)?.description}
                 </p>
               </div>
               <div
                 id="diagram-container"
-                className="p-8 bg-white min-h-[600px] flex items-center justify-center"
+                className={`p-8 min-h-[600px] ${
+                  isDarkMode ? "bg-gray-950" : "bg-white"
+                }`}
               >
-                <DiagramComponent />
+                <div className="w-full flex flex-col items-center">
+                  {getDiagramComponent(selectedDiagram, isDarkMode)}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -1208,22 +669,41 @@ export default function DiagramsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white z-50 flex flex-col"
+            className={`fixed inset-0 z-50 flex flex-col ${isDarkMode ? "bg-gray-950" : "bg-white"}`}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className={`flex items-center justify-between p-4 border-b ${
+              isDarkMode ? "border-gray-800 bg-gray-900" : "border-gray-200"
+            }`}>
+              <h2 className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                 {diagrams.find((d) => d.id === selectedDiagram)?.title}
               </h2>
-              <button
-                onClick={() => setIsFullscreen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Dark Mode Toggle in Fullscreen */}
+                <button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? "bg-gray-800 hover:bg-gray-700 text-yellow-400" 
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                  <span className="font-medium">Close</span>
+                </button>
+              </div>
             </div>
-            <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
-              <div className="max-w-6xl w-full">
-                <DiagramComponent />
+            <div className={`flex-1 overflow-auto p-8 ${
+              isDarkMode ? "bg-gray-950" : "bg-gray-50"
+            }`}>
+              <div className="max-w-6xl w-full mx-auto flex flex-col items-center">
+                {getDiagramComponent(selectedDiagram, isDarkMode)}
               </div>
             </div>
           </motion.div>
@@ -1234,6 +714,7 @@ export default function DiagramsPage() {
       <AIChatBubble
         diagramType={selectedDiagram}
         diagramTitle={diagrams.find((d) => d.id === selectedDiagram)?.title || "diagram"}
+        isDarkMode={isDarkMode}
       />
     </div>
   );
