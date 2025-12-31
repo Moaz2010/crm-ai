@@ -455,12 +455,12 @@ export const SequenceDiagram: React.FC<DiagramProps> = ({ isDarkMode = false }) 
       <text x="500" y="245" textAnchor="middle" className="text-xs fill-gray-500">6: Parsed data</text>
       
       {/* 7: INSERT lead */}
-      <line x1="418" y1="250" x2="762" y2="250" stroke="#374151" strokeWidth="1.5" markerEnd="url(#arrow)" />
-      <text x="590" y="240" textAnchor="middle" className="text-xs fill-gray-700">7: INSERT lead</text>
+      <line x1="418" y1="255" x2="762" y2="255" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#arrow)" />
+      <text x="590" y="248" textAnchor="middle" className="text-xs" fill={textColor}>7: INSERT lead</text>
       
       {/* 8: Lead created */}
-      <line x1="762" y1="280" x2="418" y2="280" stroke="#6b7280" strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arrow-dashed)" />
-      <text x="590" y="295" textAnchor="middle" className="text-xs fill-gray-500">8: Lead created</text>
+      <line x1="762" y1="290" x2="418" y2="290" stroke={dashedColor} strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arrow-dashed)" />
+      <text x="590" y="308" textAnchor="middle" className="text-xs" fill={subTextColor}>8: Lead created</text>
       
       {/* 9: Success response */}
       <line x1="402" y1="310" x2="238" y2="310" stroke="#6b7280" strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arrow-dashed)" />
@@ -657,11 +657,11 @@ export const DFDLevel1: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
       <text x="495" y="142" textAnchor="middle" className="text-sm font-bold" fill={textColor}>Lead</text>
 
       {/* Process 3.0: Score Lead */}
-      <rect x="630" y="80" width="130" height="70" rx="10" fill={boxFill} stroke={strokeColor} strokeWidth="2" />
-      <line x1="630" y1="105" x2="760" y2="105" stroke={strokeColor} strokeWidth="1.5" />
-      <text x="695" y="98" textAnchor="middle" className="text-xs font-semibold" fill={subTextColor}>3.0</text>
-      <text x="695" y="125" textAnchor="middle" className="text-sm font-bold" fill={textColor}>Score</text>
-      <text x="695" y="142" textAnchor="middle" className="text-sm font-bold" fill={textColor}>Lead</text>
+      <rect x="630" y="180" width="130" height="70" rx="10" fill={boxFill} stroke={strokeColor} strokeWidth="2" />
+      <line x1="630" y1="205" x2="760" y2="205" stroke={strokeColor} strokeWidth="1.5" />
+      <text x="695" y="198" textAnchor="middle" className="text-xs font-semibold" fill={subTextColor}>3.0</text>
+      <text x="695" y="225" textAnchor="middle" className="text-sm font-bold" fill={textColor}>Score</text>
+      <text x="695" y="242" textAnchor="middle" className="text-sm font-bold" fill={textColor}>Lead</text>
 
       {/* Process 4.0: Manage Lead */}
       <rect x="300" y="280" width="130" height="70" rx="10" fill={boxFill} stroke={strokeColor} strokeWidth="2" />
@@ -705,14 +705,18 @@ export const DFDLevel1: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
       <text x="380" y="105" textAnchor="middle" className="text-xs" fill={subTextColor}>Lead Data</text>
 
       {/* 2.0 -> 3.0 Enriched Data */}
-      <line x1="560" y1="115" x2="630" y2="115" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
-      <text x="595" y="105" textAnchor="middle" className="text-xs" fill={subTextColor}>Enriched</text>
+      <line x1="560" y1="130" x2="630" y2="200" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
+      <text x="610" y="155" textAnchor="middle" className="text-xs" fill={subTextColor}>Enriched</text>
 
       {/* 2.0 <-> External APIs */}
       <line x1="560" y1="100" x2="770" y2="100" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
       <text x="665" y="90" textAnchor="middle" className="text-xs" fill={subTextColor}>Enrich Request</text>
       <line x1="770" y1="140" x2="560" y2="140" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
       <text x="665" y="158" textAnchor="middle" className="text-xs" fill={subTextColor}>API Response</text>
+      
+      {/* 3.0 <-> External APIs (Score uses AI) */}
+      <line x1="760" y1="200" x2="820" y2="150" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
+      <text x="805" y="180" textAnchor="middle" className="text-xs" fill={subTextColor}>AI</text>
 
       {/* 1.0 -> D1 Store Lead */}
       <line x1="265" y1="150" x2="265" y2="230" stroke={strokeColor} strokeWidth="1.5" />
@@ -720,9 +724,9 @@ export const DFDLevel1: React.FC<DiagramProps> = ({ isDarkMode = false }) => {
       <text x="350" y="220" textAnchor="middle" className="text-xs" fill={subTextColor}>Store Lead</text>
 
       {/* 3.0 -> D1 Update Score */}
-      <line x1="695" y1="150" x2="695" y2="230" stroke={strokeColor} strokeWidth="1.5" />
-      <line x1="695" y1="230" x2="650" y2="280" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
-      <text x="710" y="200" textAnchor="middle" className="text-xs" fill={subTextColor}>Score</text>
+      <line x1="695" y1="250" x2="695" y2="265" stroke={strokeColor} strokeWidth="1.5" />
+      <line x1="695" y1="265" x2="650" y2="280" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />
+      <text x="710" y="262" textAnchor="middle" className="text-xs" fill={subTextColor}>Score</text>
 
       {/* D1 -> 4.0 Read Lead */}
       <line x1="500" y1="310" x2="430" y2="310" stroke={strokeColor} strokeWidth="1.5" markerEnd="url(#dfd-arrow)" />

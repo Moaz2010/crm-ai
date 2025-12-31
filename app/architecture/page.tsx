@@ -16,7 +16,11 @@ import {
   GitBranch,
   Workflow,
   Users,
-  Code2
+  Code2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Move
 } from "lucide-react";
 import {
   ERDDiagram,
@@ -195,6 +199,13 @@ export default function ArchitecturePage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Zoom and Pan state for fullscreen
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const diagramContainerRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -218,6 +229,48 @@ export default function ArchitecturePage() {
     }
   }, [isChatOpen]);
 
+  // Reset zoom when changing diagrams or closing fullscreen
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [currentDiagram, isFullscreen]);
+
+  // Zoom handlers
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Mouse wheel zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 3));
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (zoom > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoom > 1) {
+      e.preventDefault();
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
   const nextDiagram = () => {
     setCurrentDiagram((prev) => (prev + 1) % diagrams.length);
   };
@@ -240,15 +293,19 @@ export default function ArchitecturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
-          currentDiagram: diagrams[currentDiagram].title,
-          diagramContext: diagrams[currentDiagram].description,
+          diagramType: diagrams[currentDiagram].id,
+          conversationHistory: messages,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to get response");
+      }
 
       const data = await response.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+      const assistantMessage = data.message || data.response || "I couldn't generate a response.";
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -328,7 +385,7 @@ export default function ArchitecturePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Diagram Navigation */}
         <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
           {diagrams.map((diagram, index) => {
@@ -414,7 +471,7 @@ export default function ArchitecturePage() {
             </button>
 
             {/* SVG Diagram */}
-            <div className="p-8 overflow-auto min-h-[600px]">
+            <div className="p-4 overflow-auto" style={{ height: 'calc(100vh - 280px)', minHeight: '400px' }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentDiagramData.id}
@@ -441,50 +498,119 @@ export default function ArchitecturePage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black"
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setIsFullscreen(false)}
-              className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-              <span className="font-medium">Close</span>
-            </button>
+            {/* Top Controls Bar */}
+            <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent">
+              {/* Left: Dark Mode Toggle */}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2.5 bg-gray-800/90 hover:bg-gray-700 text-white rounded-lg shadow-lg transition-colors"
+                title={isDarkMode ? "Light Mode" : "Dark Mode"}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
 
-            {/* Dark Mode Toggle in Fullscreen */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="absolute top-4 left-4 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg shadow-lg transition-colors"
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+              {/* Center: Title */}
+              <div className="text-white text-center">
+                <h2 className="text-lg font-bold">{currentDiagramData.title}</h2>
+                <p className="text-xs text-gray-400">{currentDiagram + 1} / {diagrams.length}</p>
+              </div>
 
-            {/* Navigation in Fullscreen */}
+              {/* Right: Close Button */}
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+                <span className="font-medium hidden sm:inline">Close</span>
+              </button>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 bg-gray-900/90 backdrop-blur rounded-full shadow-xl border border-gray-700">
+              <button
+                onClick={handleZoomOut}
+                disabled={zoom <= 0.5}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-white"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-5 h-5" />
+              </button>
+              
+              <div className="px-3 py-1 min-w-[60px] text-center">
+                <span className="text-white font-medium text-sm">{Math.round(zoom * 100)}%</span>
+              </div>
+              
+              <button
+                onClick={handleZoomIn}
+                disabled={zoom >= 3}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-white"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
+              
+              <div className="w-px h-6 bg-gray-600 mx-1" />
+              
+              <button
+                onClick={handleResetZoom}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-white"
+                title="Reset View"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </button>
+              
+              {zoom > 1 && (
+                <>
+                  <div className="w-px h-6 bg-gray-600 mx-1" />
+                  <div className="flex items-center gap-1 text-gray-400 text-xs">
+                    <Move className="w-4 h-4" />
+                    <span>Drag to pan</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Navigation Arrows */}
             <button
               onClick={prevDiagram}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-4 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-4 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors"
             >
               <ChevronLeft className="w-8 h-8" />
             </button>
             <button
               onClick={nextDiagram}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-4 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-4 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors"
             >
               <ChevronRight className="w-8 h-8" />
             </button>
 
-            {/* Diagram Title */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 text-white text-center">
-              <h2 className="text-xl font-bold">{currentDiagramData.title}</h2>
-              <p className="text-sm text-gray-400">{currentDiagram + 1} / {diagrams.length}</p>
-            </div>
-
-            {/* Fullscreen Diagram */}
-            <div className={`w-full h-full flex flex-col items-center justify-center p-16 pt-24 ${
-              isDarkMode ? "bg-gray-950" : "bg-gray-900"
-            }`}>
-              <div className="w-full max-w-6xl">
+            {/* Fullscreen Diagram with Zoom/Pan */}
+            <div 
+              ref={diagramContainerRef}
+              className={`w-full h-full flex items-center justify-center overflow-hidden select-none ${
+                isDarkMode ? "bg-gray-950" : "bg-gray-900"
+              } ${isDragging ? "cursor-grabbing" : zoom > 1 ? "cursor-grab" : "cursor-default"}`}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <div 
+                className="w-full max-w-6xl p-8 transition-transform duration-75"
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                  transformOrigin: 'center center',
+                  pointerEvents: isDragging ? 'none' : 'auto',
+                }}
+              >
                 {getDiagramComponent(currentDiagramData.id, true)}
               </div>
+            </div>
+
+            {/* Keyboard Shortcuts Hint */}
+            <div className="absolute bottom-6 right-6 z-10 text-gray-500 text-xs">
+              <p>Scroll to zoom • Drag to pan</p>
             </div>
           </motion.div>
         )}
@@ -529,7 +655,7 @@ export default function ArchitecturePage() {
               <div className={`max-h-[450px] min-h-[300px] overflow-y-auto p-4 space-y-4 ${
                 isDarkMode ? "bg-gray-900" : "bg-gray-50"
               }`}>
-                {messages.map((msg, index) => (
+                {messages.filter(msg => msg.content && msg.content.trim()).map((msg, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 10 }}
@@ -547,7 +673,7 @@ export default function ArchitecturePage() {
                       }`}
                     >
                       <div className="prose prose-sm max-w-none">
-                        {renderMarkdown(msg.content)}
+                        {renderMarkdown(msg.content) || msg.content}
                       </div>
                     </div>
                   </motion.div>

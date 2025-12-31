@@ -21,6 +21,10 @@ import {
   User,
   Moon,
   Sun,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Move,
 } from "lucide-react";
 import {
   ERDDiagram,
@@ -554,6 +558,54 @@ export default function DiagramsPage() {
   const [selectedDiagram, setSelectedDiagram] = useState<DiagramType>("erd");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Zoom and Pan state for fullscreen
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // Reset zoom when changing diagrams or closing fullscreen
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [selectedDiagram, isFullscreen]);
+
+  // Zoom handlers
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Mouse wheel zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 3));
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (zoom > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoom > 1) {
+      e.preventDefault();
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
 
   const currentDescription = diagramDescriptions[selectedDiagram];
 
@@ -733,6 +785,7 @@ export default function DiagramsPage() {
             exit={{ opacity: 0 }}
             className={`fixed inset-0 z-50 flex flex-col ${isDarkMode ? "bg-gray-950" : "bg-white"}`}
           >
+            {/* Header */}
             <div className={`flex items-center justify-between p-4 border-b ${
               isDarkMode ? "border-gray-800 bg-gray-900" : "border-gray-200"
             }`}>
@@ -740,7 +793,7 @@ export default function DiagramsPage() {
                 {diagrams.find((d) => d.id === selectedDiagram)?.title}
               </h2>
               <div className="flex items-center gap-2">
-                {/* Dark Mode Toggle in Fullscreen */}
+                {/* Dark Mode Toggle */}
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className={`p-2 rounded-lg transition-colors ${
@@ -761,11 +814,87 @@ export default function DiagramsPage() {
                 </button>
               </div>
             </div>
-            <div className={`flex-1 overflow-auto p-8 ${
-              isDarkMode ? "bg-gray-950" : "bg-gray-50"
-            }`}>
-              <div className="max-w-6xl w-full mx-auto flex flex-col items-center">
+
+            {/* Diagram Area with Zoom/Pan */}
+            <div 
+              className={`flex-1 overflow-hidden flex items-center justify-center ${
+                isDarkMode ? "bg-gray-950" : "bg-gray-50"
+              } ${isDragging ? "cursor-grabbing" : zoom > 1 ? "cursor-grab" : "cursor-default"}`}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <div 
+                className="max-w-6xl w-full p-8 select-none transition-transform duration-75"
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                  transformOrigin: 'center center',
+                  pointerEvents: isDragging ? 'none' : 'auto',
+                }}
+              >
                 {getDiagramComponent(selectedDiagram, isDarkMode)}
+              </div>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className={`flex items-center justify-center gap-4 p-4 border-t ${
+              isDarkMode ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-white"
+            }`}>
+              <button
+                onClick={handleZoomOut}
+                disabled={zoom <= 0.5}
+                className={`p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  isDarkMode ? "hover:bg-gray-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                }`}
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-5 h-5" />
+              </button>
+              
+              <div className={`px-4 py-2 rounded-lg min-w-[80px] text-center ${
+                isDarkMode ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-900"
+              }`}>
+                <span className="font-medium">{Math.round(zoom * 100)}%</span>
+              </div>
+              
+              <button
+                onClick={handleZoomIn}
+                disabled={zoom >= 3}
+                className={`p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  isDarkMode ? "hover:bg-gray-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                }`}
+                title="Zoom In"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
+              
+              <div className={`w-px h-6 ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
+              
+              <button
+                onClick={handleResetZoom}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode ? "hover:bg-gray-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                }`}
+                title="Reset View"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </button>
+              
+              {zoom > 1 && (
+                <div className={`flex items-center gap-2 ml-4 text-sm ${
+                  isDarkMode ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  <Move className="w-4 h-4" />
+                  <span>Drag to pan</span>
+                </div>
+              )}
+              
+              <div className={`ml-auto text-xs ${
+                isDarkMode ? "text-gray-500" : "text-gray-400"
+              }`}>
+                Scroll to zoom
               </div>
             </div>
           </motion.div>
